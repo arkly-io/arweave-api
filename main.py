@@ -107,6 +107,8 @@ async def create_transaction(files: List[UploadFile] = File(...)):
             tx.add_tag('Content-Type', 'application/x-bzip2 bz2')
             tx.sign()
             uploader = get_uploader(tx, file_handler)
+            while not uploader.is_complete:
+                uploader.upload_chunk()
             
         print("Finished!")
         status = tx.get_status()
