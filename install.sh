@@ -1,5 +1,5 @@
-pip3 install fastapi
-pip3 install "uvicorn[standard]"
-pip3 install arweave-python-client
-pip3 install python-multipart
-pip3 install requests
+python3 -m pip install fastapi
+python3 -m pip install "uvicorn[standard]"
+python3 -m pip install arweave-python-client
+python3 -m pip install python-multipart
+python3 -m pip install requests
