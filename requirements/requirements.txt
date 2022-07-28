@@ -1,0 +1,7 @@
+# Requirements for arkly-io.
+
+fastapi==0.79.0
+uvicorn==0.18.2
+arweave-python-client==1.0.18
+python-multipart==0.0.5
+requests==2.28.1
