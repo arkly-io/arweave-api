@@ -20,7 +20,7 @@ myFile.close()
 # Testing out last transaction endpoint
 myFile = open('myWallet.json', 'rb')
 files = {'file':('myWallet.json', myFile)}
-req = requests.post(url='http://127.0.0.1:8000/last_transaction/', files=files)
+req = requests.post(url='http://127.0.0.1:8000/check_last_transaction/', files=files)
 print("UPLOAD RESPONSE:")
 print(req.text)
 myFile.close()

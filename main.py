@@ -11,6 +11,9 @@ from datetime import datetime
 import tarfile
 import os.path
 
+from fastapi.middleware.cors import CORSMiddleware
+
+
 # A function that created a wallet object to be used in various API calls
 # Parameter(s): JWK file
 # Returns: Wallet object
@@ -27,6 +30,20 @@ async def create_temp_wallet(file):
 
 app = FastAPI()
 
+
+origins = [
+    "http://localhost",
+    "http://localhost:3000",
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 # Root api call. Will be customized later...
 @app.get("/")
 def read_root():
@@ -37,7 +54,8 @@ def read_root():
 # Returns: The balance as a JSON object
 @app.post("/check_balance/")
 async def check_balance(file: UploadFile = File(...)):
-    wallet = await create_temp_wallet(file)
+    JWKFile = file
+    wallet = await create_temp_wallet(JWKFile)
     if (wallet!="Error"):
         balance = wallet.balance
         return {"balance": balance}
@@ -47,16 +65,16 @@ async def check_balance(file: UploadFile = File(...)):
 # Allows a user to check the transaction id of their last transaction
 # Parameter(s): JWK file
 # Returns: The transaction id as a JSON object
-@app.post("/last_transaction/")
+@app.post("/check_last_transaction/")
 async def check_last_transaction(file: UploadFile = File(...)):
     wallet = await create_temp_wallet(file)
     if (wallet!="Error"):
         # print(wallet)
         last_transaction = wallet.get_last_transaction_id()
-        return {"last_transaction": last_transaction}
+        return {"last_transaction_id": last_transaction}
     else:
         print(wallet)
-        return {"last_transaction": "Failure to get response..."}
+        return {"last_transaction_id": "Failure to get response..."}
 
 
 # Creates a folder for the wallet user to place
