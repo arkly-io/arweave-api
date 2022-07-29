@@ -1,0 +1,34 @@
+# Pylint configuration for Arkly projects.
+#
+# .pylintrc guide: https://github.com/PyCQA/pylint/blob/cfc393a8dff9ec09bd2fcb25857e772ae04a4991/examples/pylintrc
+#
+# Notes:
+#
+# 	- Values are comma separated.
+#	- Place each exception on a newline.
+# 	- Include a comma after each new entry.
+# 	- Optionally, a comment for the value if additional context is needed,
+#		e.g. disabled warnings, where normally warnings are our guide.
+#
+
+[MAIN]
+
+ignore=
+	LICENSE,
+	.pylintrc,
+
+ignore-patterns=
+	^(.+).ini$,
+	.gitignore,
+	.pre-commit-config.yaml,
+	^(.+).md$,
+	^(.+).sh$,
+
+ignore-paths=
+	requirements/*,
+	.github/,
+
+[MESSAGES CONTROL]
+
+disable =
+	C0301, 	# line-length too long, see Black documented recommendations.
