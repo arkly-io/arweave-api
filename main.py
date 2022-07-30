@@ -1,31 +1,36 @@
-import os
-import arweave
+"""
+This module is an Arweave FastAPI that allows users to communicate to Arweave, and put files on chain.
+"""
 import json
-from typing import Union, List
-from fastapi import FastAPI, File, UploadFile
-
-from arweave.arweave_lib import Wallet, Transaction
-from arweave.transaction_uploader import get_uploader
-
-from datetime import datetime
-import tarfile
+import os
 import os.path
+import tarfile
+from datetime import datetime
+from typing import List
 
+import arweave
+from arweave.arweave_lib import Transaction
+from arweave.transaction_uploader import get_uploader
+from fastapi import FastAPI, File, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
+from jinja2 import Undefined
 
 
-# A function that created a wallet object to be used in various API calls
-# Parameter(s): JWK file
-# Returns: Wallet object
 async def create_temp_wallet(file):
-    try:
-        hold = await file.read()
-        jsonObj = json.loads(hold)
-        wallet = arweave.Wallet.from_data(jsonObj)
-        return wallet
-    except:
+    """A function that created a wallet object to be used in various API calls
+
+    :param file: JWK file, defaults to File(...)
+    :type file: JSON
+    :return: Wallet object
+    :rtype: _type_
+    """
+    hold = await file.read()
+    json_obj = json.loads(hold)
+    wallet = arweave.Wallet.from_data(json_obj)
+    if wallet == Undefined:
         print("Wallet object not made. Try another wallet, or try again.")
         return "Error"
+    return wallet
 
 
 app = FastAPI()
@@ -45,99 +50,109 @@ app.add_middleware(
 )
 
 # Root api call. Will be customized later...
+
+
 @app.get("/")
 def read_root():
+    """Base API endpoint
+    :return: A JSON Object
+    :rtype: JSON Obj
+    """
     return {"Hello": "Welcome to the Arkly Arweave API!"}
 
-# Allows a user to check the balance of their wallet
-# Parameter(s): JWK file
-# Returns: The balance as a JSON object
+
 @app.post("/check_balance/")
 async def check_balance(file: UploadFile = File(...)):
-    JWKFile = file
-    wallet = await create_temp_wallet(JWKFile)
-    if (wallet!="Error"):
+    """Allows a user to check the balance of their wallet
+    :param file: JWK file, defaults to File(...)
+    :type file: JSON
+    :return: The balance of your wallet as a JSON object
+    :rtype: JSON object
+    """
+    jwk_file = file
+    wallet = await create_temp_wallet(jwk_file)
+    if wallet != "Error":
         balance = wallet.balance
         return {"balance": balance}
-    else:
-        return {"balance": "Error on wallet load."}
+    return {"balance": "Error on wallet load."}
 
-# Allows a user to check the transaction id of their last transaction
-# Parameter(s): JWK file
-# Returns: The transaction id as a JSON object
+
 @app.post("/check_last_transaction/")
 async def check_last_transaction(file: UploadFile = File(...)):
+    """Allows a user to check the transaction id of their last transaction
+    :param file: JWK file, defaults to File(...)
+    :type file: UploadFile, optional
+    :return: The transaction id as a JSON object
+    :rtype: JSON object
+    """
     wallet = await create_temp_wallet(file)
-    if (wallet!="Error"):
+    if wallet != "Error":
         # print(wallet)
         last_transaction = wallet.get_last_transaction_id()
         return {"last_transaction_id": last_transaction}
-    else:
-        print(wallet)
-        return {"last_transaction_id": "Failure to get response..."}
+    return {"last_transaction_id": "Failure to get response..."}
 
-
-# Creates a folder for the wallet user to place
-# Their uploads in. Compresses and packages uploaded files into .tar.bz2 files
-# And uploads the compressed tarball to Arweave for a small fee.
-# Fee will be known once the transaction has been applied on Arweave.
-# Parameter(s): JWK file, Files to be uploaded
-# Returns: The transaction id as a JSON object
 
 # TO DO:
 # transfer small fee from users wallet to an orgnization wallet to collect payment from API
 # Delete user created files??? Maybe we want to store them for backup purposes... not sure.
 @app.post("/create_transaction/")
 async def create_transaction(files: List[UploadFile] = File(...)):
+    """Creates a folder for the wallet user to place Their uploads in.
+    Compresses and packages uploaded files into .tar.bz2 files and uploads the compressed tarball to Arweave for a small fee.
+    Fee will be known once the transaction has been applied on Arweave.
+
+    :param files: JWK file (Required) and files to be uploaded, defaults to File(...)
+    :type files: List[UploadFile]
+    :return: The transaction id as a JSON object
+    :rtype: JSON object
+    """
     for file in files:
         wallet = await create_temp_wallet(file)
-        if (wallet!="Error"):
+        if wallet != "Error":
             files.remove(file)
             break
-    if (wallet!="Error"):
-        last_transaction = wallet.get_last_transaction_id()
+    if wallet != "Error":
         # wallet.address
         # Try to create a folder for their wallet
         # All file uploads for transactions will be held under the users
         # Profile.
         try:
             os.mkdir(wallet.address)
-        except:
+        except FileExistsError:
             pass
 
-        dateTime = str(datetime.now())
-        filePath = str(wallet.address) + "/" + dateTime
-        os.mkdir(filePath)
+        date_time = str(datetime.now())
+        file_path = str(wallet.address) + "/" + date_time
+        os.mkdir(file_path)
         for file in files:
-            readFile = await file.read()
-            outputFile = open(filePath + "/" + file.filename, "wb")
-            outputFile.write(readFile)
-        
+            read_file = await file.read()
+            output_file = open(file_path + "/" + file.filename, "wb")
+            output_file.write(read_file)
+
         # Create compressed .tar.bz2 file
-        tarFileName = filePath + ".tar.bz2"
-        with tarfile.open(tarFileName, 'w:bz2') as tar:
-            tar.add(filePath, arcname=os.path.basename(filePath))
-        
+        tar_file_name = file_path + ".tar.bz2"
+        with tarfile.open(tar_file_name, "w:bz2") as tar:
+            tar.add(file_path, arcname=os.path.basename(file_path))
+
         print(wallet.balance)
 
-        with open(tarFileName, "rb", buffering=0) as file_handler:
-            tx = Transaction(wallet, file_handler=file_handler, file_path=tarFileName)
-            tx.add_tag('Content-Type', 'application/x-bzip2 bz2')
-            tx.sign()
-            uploader = get_uploader(tx, file_handler)
+        with open(tar_file_name, "rb", buffering=0) as file_handler:
+            new_transaction = Transaction(
+                wallet, file_handler=file_handler, file_path=tar_file_name
+            )
+            new_transaction.add_tag("Content-Type", "application/x-bzip2 bz2")
+            new_transaction.sign()
+            uploader = get_uploader(new_transaction, file_handler)
             while not uploader.is_complete:
                 uploader.upload_chunk()
-            
+
         print("Finished!")
-        status = tx.get_status()
+        status = new_transaction.get_status()
         print(status)
-        print(tx.id)
+        print(new_transaction.id)
         print(wallet.balance)
 
-       
-        return {"transaction_id": tx.id}
-    else:
-        print(wallet)
-        return {"transaction_id": "Error creating transaction."}
+        return {"transaction_id": new_transaction.id}
 
-
+    return {"transaction_id": "Error creating transaction."}

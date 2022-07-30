@@ -1,4 +1,7 @@
+"""A module to test API routes
+"""
 import requests
+
 response = requests.get("http://127.0.0.1:8000/")
 
 # response.content() # Return the raw bytes of the data payload
@@ -10,24 +13,30 @@ response = requests.get("http://127.0.0.1:8000/")
 # If another request would like to be sent, then the file must be re-opened.
 
 # Trying out check balance endpoint
-myFile = open('myWallet.json', 'rb')
-files = {'file':('myWallet.json', myFile)}
-req = requests.post(url='http://127.0.0.1:8000/check_balance/', files=files)
-print("UPLOAD RESPONSE:")
-print(req.text)
-myFile.close()
+with open("myWallet.json", "rb") as my_file:
+    files = {"file": ("myWallet.json", my_file)}
+    req = requests.post(url="http://127.0.0.1:8000/check_balance/", files=files)
+    print("UPLOAD RESPONSE:")
+    print(req.text)
 
 # Testing out last transaction endpoint
-myFile = open('myWallet.json', 'rb')
-files = {'file':('myWallet.json', myFile)}
-req = requests.post(url='http://127.0.0.1:8000/check_last_transaction/', files=files)
-print("UPLOAD RESPONSE:")
-print(req.text)
-myFile.close()
+with open("myWallet.json", "rb") as my_file:
+    files = {"file": ("myWallet.json", my_file)}
+    req = requests.post(
+        url="http://127.0.0.1:8000/check_last_transaction/", files=files
+    )
+    print("UPLOAD RESPONSE:")
+    print(req.text)
 
 # Testing out file upload endpoint
-files = [('files', open('myWallet.json', 'rb')), ('files', open('files/text-sample-1.pdf', 'rb'))]
-req = requests.post(url='http://127.0.0.1:8000/create_transaction/', files=files)
-print("UPLOAD RESPONSE:")
-print(req.text)
-
+with open("myWallet.json", "rb") as my_wallet:
+    with open("files/text-sample-1.pdf", "rb") as sample_file:
+        files = [
+            ("files", my_wallet),
+            ("files", sample_file),
+        ]
+        req = requests.post(
+            url="http://127.0.0.1:8000/create_transaction/", files=files
+        )
+        print("UPLOAD RESPONSE:")
+        print(req.text)

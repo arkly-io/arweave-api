@@ -1,4 +1,11 @@
-# Placeholder for future tests.
+"""Placeholder for future tests.
+"""
+
 
 def test_true():
-	return True
+    """A sample test
+
+    :return: True
+    :rtype: Boolean
+    """
+    return True
