@@ -29,14 +29,14 @@ with open("myWallet.json", "rb") as my_file:
     print(req.text)
 
 # Testing out file upload endpoint
-with open("myWallet.json", "rb") as my_wallet:
-    with open("files/text-sample-1.pdf", "rb") as sample_file:
-        files = [
-            ("files", my_wallet),
-            ("files", sample_file),
-        ]
-        req = requests.post(
-            url="http://127.0.0.1:8000/create_transaction/", files=files
-        )
-        print("UPLOAD RESPONSE:")
-        print(req.text)
+# with open("myWallet.json", "rb") as my_wallet:
+#     with open("files/text-sample-1.pdf", "rb") as sample_file:
+#         files = [
+#             ("files", my_wallet),
+#             ("files", sample_file),
+#         ]
+#         req = requests.post(
+#             url="http://127.0.0.1:8000/create_transaction/", files=files
+#         )
+#         print("UPLOAD RESPONSE:")
+#         print(req.text)

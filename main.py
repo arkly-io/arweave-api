@@ -13,7 +13,6 @@ from arweave.arweave_lib import Transaction
 from arweave.transaction_uploader import get_uploader
 from fastapi import FastAPI, File, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
-from jinja2 import Undefined
 
 
 async def create_temp_wallet(file):
@@ -27,7 +26,7 @@ async def create_temp_wallet(file):
     hold = await file.read()
     json_obj = json.loads(hold)
     wallet = arweave.Wallet.from_data(json_obj)
-    if wallet == Undefined:
+    if wallet is None:
         print("Wallet object not made. Try another wallet, or try again.")
         return "Error"
     return wallet
