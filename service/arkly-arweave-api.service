@@ -1,0 +1,13 @@
+[Unit]
+Description=arkly-arweave-api
+After=network.target
+StartLimitIntervalSec=0
+[Service]
+Type=simple
+Restart=always
+RestartSec=1
+User=arkly
+ExecStart=/usr/bin/python -m uvicorn main:app --app-dir /home/arkly/git/arkly-io/arweave-api/ --port 8000
+
+[Install]
+WantedBy=multi-user.target
