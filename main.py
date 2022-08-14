@@ -129,9 +129,9 @@ async def create_transaction(files: List[UploadFile] = File(...)):
             output_file = open(file_path + "/" + file.filename, "wb")
             output_file.write(read_file)
 
-        # Create compressed .tar.bz2 file
-        tar_file_name = file_path + ".tar.bz2"
-        with tarfile.open(tar_file_name, "w:bz2") as tar:
+        # Create compressed .tar.gz file
+        tar_file_name = file_path + ".tar.gz"
+        with tarfile.open(tar_file_name, "w:gz") as tar:
             tar.add(file_path, arcname=os.path.basename(file_path))
 
         print(wallet.balance)
@@ -140,7 +140,7 @@ async def create_transaction(files: List[UploadFile] = File(...)):
             new_transaction = Transaction(
                 wallet, file_handler=file_handler, file_path=tar_file_name
             )
-            new_transaction.add_tag("Content-Type", "application/x-bzip2 bz2")
+            new_transaction.add_tag("Content-Type", "application/gzip")
             new_transaction.sign()
             uploader = get_uploader(new_transaction, file_handler)
             while not uploader.is_complete:
