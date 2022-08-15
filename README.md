@@ -48,6 +48,10 @@ To test out endpoints, run `python3 test_routes.py`
 
 Documentation for the API endpoints comes in two variants:
 
+## Testing
+
+In the root folder, run `python3 tests/test_placeholder.py -v` to use unit tests.
+
 ### OpenAPI (Swagger): Interactive API docs
 
 * http://127.0.0.1:8000/docs/
