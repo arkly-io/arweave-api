@@ -6,13 +6,16 @@ import os
 import os.path
 import tarfile
 from datetime import datetime
-from typing import List
+from typing import Final, List
 
 import arweave
 from arweave.arweave_lib import Transaction
 from arweave.transaction_uploader import get_uploader
 from fastapi import FastAPI, File, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
+
+# OpenAPI tags delineating the documentation.
+TAG_ARWEAVE: Final[str] = "arweave"
 
 
 async def create_temp_wallet(file):
@@ -60,7 +63,7 @@ def read_root():
     return {"Hello": "Welcome to the Arkly Arweave API!"}
 
 
-@app.post("/check_balance/")
+@app.post("/check_balance/", tags=[TAG_ARWEAVE])
 async def check_balance(file: UploadFile = File(...)):
     """Allows a user to check the balance of their wallet
     :param file: JWK file, defaults to File(...)
@@ -76,7 +79,7 @@ async def check_balance(file: UploadFile = File(...)):
     return {"balance": "Error on wallet load."}
 
 
-@app.post("/check_last_transaction/")
+@app.post("/check_last_transaction/", tags=[TAG_ARWEAVE])
 async def check_last_transaction(file: UploadFile = File(...)):
     """Allows a user to check the transaction id of their last transaction
     :param file: JWK file, defaults to File(...)
@@ -95,7 +98,7 @@ async def check_last_transaction(file: UploadFile = File(...)):
 # TO DO:
 # transfer small fee from users wallet to an orgnization wallet to collect payment from API
 # Delete user created files??? Maybe we want to store them for backup purposes... not sure.
-@app.post("/create_transaction/")
+@app.post("/create_transaction/", tags=[TAG_ARWEAVE])
 async def create_transaction(files: List[UploadFile] = File(...)):
     """Creates a folder for the wallet user to place Their uploads in.
     Compresses and packages uploaded files into .tar.bz2 files and uploads the compressed tarball to Arweave for a small fee.
