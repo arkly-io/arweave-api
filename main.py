@@ -13,6 +13,7 @@ from arweave.arweave_lib import Transaction
 from arweave.transaction_uploader import get_uploader
 from fastapi import FastAPI, File, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import RedirectResponse
 
 # OpenAPI tags delineating the documentation.
 TAG_ARWEAVE: Final[str] = "arweave"
@@ -54,13 +55,12 @@ app.add_middleware(
 # Root api call. Will be customized later...
 
 
-@app.get("/")
-def read_root():
-    """Base API endpoint
-    :return: A JSON Object
-    :rtype: JSON Obj
+@app.get("/", include_in_schema=False)
+def redirect_root_to_docs():
+    """Redirect a user calling the API root '/' to the API
+    documentation.
     """
-    return {"Hello": "Welcome to the Arkly Arweave API!"}
+    return RedirectResponse(url="/docs")
 
 
 @app.post("/check_balance/", tags=[TAG_ARWEAVE])
