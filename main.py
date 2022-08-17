@@ -15,8 +15,26 @@ from fastapi import FastAPI, File, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import RedirectResponse
 
+# Arkly-arweave API description.
+API_DESCRIPTION: Final[
+    str
+] = "Connecting Arweave with digital preservation best-practice"
+
 # OpenAPI tags delineating the documentation.
 TAG_ARWEAVE: Final[str] = "arweave"
+
+# Metadata for each of the tags in the OpenAPI specification. To order
+# their display on the page, order the tags in this block.
+tags_metadata = [
+    {
+        "name": TAG_ARWEAVE,
+        "description": "Manage Arweave transactions",
+        "externalDocs": {
+            "description": "Arkly-Arweave documentation",
+            "url": "https://docs.arkly.io",
+        },
+    },
+]
 
 
 async def create_temp_wallet(file):
@@ -36,8 +54,15 @@ async def create_temp_wallet(file):
     return wallet
 
 
-app = FastAPI()
-
+app = FastAPI(
+    title="api.arkly.io",
+    description=API_DESCRIPTION,
+    version="2022.08.17.0001",
+    contact={
+        "url": "https://arkly.io",
+    },
+    openapi_tags=tags_metadata,
+)
 
 # origins = [
 #     "http://localhost",
