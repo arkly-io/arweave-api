@@ -23,6 +23,7 @@ ignore-patterns=
 	.pre-commit-config.yaml,
 	^(.+).md$,
 	^(.+).sh$,
+	^(.+).service$,
 
 ignore-paths=
 	requirements/*,
