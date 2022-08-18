@@ -223,7 +223,9 @@ async def create_transaction(files: List[UploadFile] = File(...)):
         print(new_transaction.id, file=sys.stderr)
         print(wallet.balance, file=sys.stderr)
         return {
-            "transaction_id": f"https://viewblock.io/arweave/tx/{new_transaction.id}"
+            "transaction_id": f"{new_transaction.id}",
+            "transaction_link": f"https://viewblock.io/arweave/tx/{new_transaction.id}",
+            "transaction_status": f"{tx_status}",
+            "wallet_balance": f"{wallet.balance}",
         }
-
     return {"transaction_id": "Error creating transaction."}
