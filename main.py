@@ -120,6 +120,24 @@ async def check_last_transaction(file: UploadFile = File(...)):
     return {"last_transaction_id": "Failure to get response..."}
 
 
+async def package_content(wallet, files):
+    """Package the files submitted to the create_transaction endpoint."""
+    date_time = str(datetime.now())
+    file_path = str(wallet.address) + "/" + date_time
+    os.mkdir(file_path)
+    for file in files:
+        read_file = await file.read()
+        output_file = open(file_path + "/" + file.filename, "wb")
+        output_file.write(read_file)
+
+    # Create compressed .tar.gz file
+    tar_file_name = file_path + ".tar.gz"
+    with tarfile.open(tar_file_name, "w:gz") as tar:
+        tar.add(file_path, arcname=os.path.basename(file_path))
+
+    return tar_file_name
+
+
 # TO DO:
 # transfer small fee from users wallet to an orgnization wallet to collect payment from API
 # Delete user created files??? Maybe we want to store them for backup purposes... not sure.
@@ -149,18 +167,7 @@ async def create_transaction(files: List[UploadFile] = File(...)):
         except FileExistsError:
             pass
 
-        date_time = str(datetime.now())
-        file_path = str(wallet.address) + "/" + date_time
-        os.mkdir(file_path)
-        for file in files:
-            read_file = await file.read()
-            output_file = open(file_path + "/" + file.filename, "wb")
-            output_file.write(read_file)
-
-        # Create compressed .tar.gz file
-        tar_file_name = file_path + ".tar.gz"
-        with tarfile.open(tar_file_name, "w:gz") as tar:
-            tar.add(file_path, arcname=os.path.basename(file_path))
+        tar_file_name = await package_content(wallet, files)
 
         print(wallet.balance)
 
