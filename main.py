@@ -182,11 +182,10 @@ async def create_transaction(files: List[UploadFile] = File(...)):
                 uploader.upload_chunk()
 
         print("Finished!")
-        status = new_transaction.get_status()
-        print(status)
+        tx_status = new_transaction.get_status()
+        print(tx_status)
         print(new_transaction.id)
         print(wallet.balance)
-
-        return {"transaction_id": new_transaction.id}
+        return {"transaction_id": f"https://viewblock.io/arweave/tx/{new_transaction.id}"}
 
     return {"transaction_id": "Error creating transaction."}
