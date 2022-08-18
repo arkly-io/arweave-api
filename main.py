@@ -27,6 +27,7 @@ API_DESCRIPTION: Final[
 
 # OpenAPI tags delineating the documentation.
 TAG_ARWEAVE: Final[str] = "arweave"
+TAG_ARKLY: Final[str] = "arkly"
 
 # Metadata for each of the tags in the OpenAPI specification. To order
 # their display on the page, order the tags in this block.
@@ -171,7 +172,7 @@ async def package_content(files):
     return tar_file_name
 
 
-@app.post("/create_transaction/")
+@app.post("/create_transaction/", tags=[TAG_ARWEAVE])
 async def create_transaction(files: List[UploadFile] = File(...)):
     """Create an Arkly package and Arweave transaction.
 
@@ -241,10 +242,9 @@ def _get_arweave_urls_from_tx(transaction_id):
     )
 
 
-@app.get("/validate_arweave_bag/")
+@app.get("/validate_arweave_bag/", tags=[TAG_ARKLY])
 async def validate_bag(transaction_id: str, response: Response):
-    """Given an Arweave transaction ID, Validate an Arkly link as a bag.
-    """
+    """Given an Arweave transaction ID, Validate an Arkly link as a bag."""
 
     # Setup retrieval of the data from the given transaction.
     transaction_url, arweave_url = _get_arweave_urls_from_tx(transaction_id)
