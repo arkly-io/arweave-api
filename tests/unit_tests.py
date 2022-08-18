@@ -32,6 +32,13 @@ class TestArweaveApi(unittest.TestCase):
             )
             self.assertNotEqual(req.text, None)
 
+    def test_fetch_upload(self):
+        """Testing the fetch_upload route"""
+        data = {"transaction_id": "cZiaojZtzyL1ZB7GjbWLbj62S_9pxPDHu61HQvSYgD0"}
+        req = requests.get(url="http://127.0.0.1:8000/fetch_upload/", params=data)
+        print(req.content)
+        self.assertNotEqual(req.content, None)
+
     def test_create_transaction(self):
         """Testing out the create_transaction endpoint"""
         with open("myWallet.json", "rb") as my_wallet:

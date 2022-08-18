@@ -50,7 +50,7 @@ Documentation for the API endpoints comes in two variants:
 
 ## Testing
 
-In the root folder, run `python3 tests/test_placeholder.py -v` to use unit tests.
+In the root folder, run `python3 tests/unit_tests.py -v` to use unit tests.
 
 ### OpenAPI (Swagger): Interactive API docs
 

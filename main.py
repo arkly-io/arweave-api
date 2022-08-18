@@ -7,6 +7,7 @@ import os.path
 import sys
 import tarfile
 import tempfile
+import urllib.request
 from pathlib import Path
 from typing import Final, List
 
@@ -16,9 +17,9 @@ import requests
 import ulid
 from arweave.arweave_lib import Transaction
 from arweave.transaction_uploader import get_uploader
-from fastapi import FastAPI, File, Response, UploadFile, status
+from fastapi import FastAPI, File, HTTPException, Response, UploadFile, status
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import RedirectResponse
+from fastapi.responses import FileResponse, RedirectResponse
 
 # Arkly-arweave API description.
 API_DESCRIPTION: Final[
@@ -124,6 +125,41 @@ async def check_last_transaction(file: UploadFile = File(...)):
         last_transaction = wallet.get_last_transaction_id()
         return {"last_transaction_id": last_transaction}
     return {"last_transaction_id": "Failure to get response..."}
+
+
+@app.get("/fetch_upload/")
+def fetch_upload(transaction_id: str):
+    """Allows a user to read their file upload from the Arweave blockchain
+    :param file: JWK file, defaults to File(...)
+    :type file: UploadFile, optional
+    :return: The compressed file upload
+    :rtype: File Object
+    """
+    url = "http://arweave.net/" + transaction_id
+    try:
+        # f = urllib.request.urlopen(url)
+        # data = f.read()
+        # Create a fetching folder
+        try:
+            os.mkdir("fetching")
+        except FileExistsError:
+            pass
+        with urllib.request.urlopen(url) as response, open(
+            "fetching/" + transaction_id + ".gz", "wb"
+        ) as out_file:
+            file_header = response.read()
+            out_file.write(file_header)
+            return FileResponse("fetching/" + transaction_id + ".gz")
+        # data = f.read()
+    except urllib.request.HTTPError as err:
+        raise HTTPException(
+            status_code=404,
+            detail=(
+                "Failed to get file. "
+                + err.reason
+                + " Insure transaction id is valid, and try again."
+            ),
+        )
 
 
 async def bag_files(path: Path) -> None:

@@ -4,3 +4,4 @@ files/
 *.tar
 *.json
 venv/
+fetching/
