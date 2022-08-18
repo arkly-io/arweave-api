@@ -4,11 +4,15 @@ This module is an Arweave FastAPI that allows users to communicate to Arweave, a
 import json
 import os
 import os.path
+import sys
 import tarfile
-from datetime import datetime
-from typing import List
+import tempfile
+from pathlib import Path
+from typing import Final, List
 
 import arweave
+import bagit
+import ulid
 from arweave.arweave_lib import Transaction
 from arweave.transaction_uploader import get_uploader
 from fastapi import FastAPI, File, UploadFile
@@ -92,21 +96,49 @@ async def check_last_transaction(file: UploadFile = File(...)):
     return {"last_transaction_id": "Failure to get response..."}
 
 
-async def package_content(wallet, files):
+async def bag_files(path: Path) -> None:
+    """Use python Bagit to bag the files for Arkly-Arweave."""
+    bagit.make_bag(path, {"Random Data": "arkly.io"})
+
+
+async def package_content(files):
     """Package the files submitted to the create_transaction endpoint."""
-    date_time = str(datetime.now())
-    file_path = str(wallet.address) + "/" + date_time
-    os.mkdir(file_path)
+    # Create a folder for the user's wallet.
+    tmp_dir = tempfile.mkdtemp()
+    tmp_name = tmp_dir
+
+    package_ulid = str(ulid.new())
+    file_path = Path(tmp_name, package_ulid)
+    file_path.mkdir()
+
+    print("Location to write object to:", file_path, file=sys.stderr)
+
     for file in files:
         read_file = await file.read()
-        output_file = open(file_path + "/" + file.filename, "wb")
-        output_file.write(read_file)
+        output_file = Path(file_path, file.filename)
+        output_file.write_bytes(read_file)
+
+    # Create a metadata path for the bag.
+    metadata_path = file_path / Path(f".{package_ulid}")
+    metadata_path.mkdir(parents=True)
+    metadata = metadata_path / Path(package_ulid).with_suffix(".md")
+
+    # Write some mock metadata for demo. Move this to a separate built
+    # for purpose function later.
+    metadata.write_text('{"dc:creator": "api.arkly.io"}')
+
+    # Bag these files.
+    await bag_files(file_path)
 
     # Create compressed .tar.gz file
-    tar_file_name = file_path + ".tar.gz"
+    tar_file_name = file_path.with_suffix(".tar.gz")
     with tarfile.open(tar_file_name, "w:gz") as tar:
         tar.add(file_path, arcname=os.path.basename(file_path))
 
+    version_api: Final[str] = "v0"
+    tar_file_name = tar_file_name.rename(
+        f"{tar_file_name}".replace(".tar.gz", f"_{version_api}.tar.gz")
+    )
     return tar_file_name
 
 
@@ -139,7 +171,11 @@ async def create_transaction(files: List[UploadFile] = File(...)):
         except FileExistsError:
             pass
 
-        tar_file_name = await package_content(wallet, files)
+        tar_file_name = await package_content(files)
+
+        print("Adding version to package:", tar_file_name, file=sys.stderr)
+        print("New path exists:", tar_file_name.is_file(), file=sys.stderr)
+        print("Wallet balance before upload:", wallet.balance, file=sys.stderr)
 
         print(wallet.balance)
 
@@ -155,9 +191,11 @@ async def create_transaction(files: List[UploadFile] = File(...)):
 
         print("Finished!")
         tx_status = new_transaction.get_status()
-        print(tx_status)
-        print(new_transaction.id)
-        print(wallet.balance)
-        return {"transaction_id": f"https://viewblock.io/arweave/tx/{new_transaction.id}"}
+        print(tx_status, file=sys.stderr)
+        print(new_transaction.id, file=sys.stderr)
+        print(wallet.balance, file=sys.stderr)
+        return {
+            "transaction_id": f"https://viewblock.io/arweave/tx/{new_transaction.id}"
+        }
 
     return {"transaction_id": "Error creating transaction."}
