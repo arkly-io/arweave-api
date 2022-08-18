@@ -170,20 +170,19 @@ async def package_content(files):
     return tar_file_name
 
 
-# TO DO:
-# transfer small fee from users wallet to an orgnization wallet to collect payment from API
-# Delete user created files??? Maybe we want to store them for backup purposes... not sure.
-@app.post("/create_transaction/", tags=[TAG_ARWEAVE])
+@app.post("/create_transaction/")
 async def create_transaction(files: List[UploadFile] = File(...)):
-    """Creates a folder for the wallet user to place Their uploads in.
-    Compresses and packages uploaded files into .tar.bz2 files and uploads the compressed tarball to Arweave for a small fee.
-    Fee will be known once the transaction has been applied on Arweave.
+    """Create an Arkly package and Arweave transaction.
 
-    :param files: JWK file (Required) and files to be uploaded, defaults to File(...)
-    :type files: List[UploadFile]
-    :return: The transaction id as a JSON object
-    :rtype: JSON object
+    We do so as follows:
+        - Create a folder for the wallet user to place their uploads in
+          as well as any additional folders and metadata required.
+        - Create a bagit file from that folder.
+        - Compresses and packages uploaded files into .tar.gz files.
+        - Uploads the compressed tarball to Arweave for the current
+          Arweave price.
     """
+
     for file in files:
         wallet = await create_temp_wallet(file)
         if wallet != "Error":
