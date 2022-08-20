@@ -42,15 +42,13 @@ deactivate
 
 To start the server locally, run `uvicorn main:app --reload`
 
-To test out endpoints, run `python3 test_routes.py`
+## Testing
+
+In the root folder, start the server locally and then use `pytest -v` to execute the unit tests.
 
 ## Endpoint documentation :scroll:
 
 Documentation for the API endpoints comes in two variants:
-
-## Testing
-
-In the root folder, start the server locally and then use `pytest -v` to execute the unit tests.
 
 ### OpenAPI (Swagger): Interactive API docs
 
