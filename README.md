@@ -44,7 +44,8 @@ To start the server locally, run `uvicorn main:app --reload`
 
 ## Testing :gear:
 
-In the root folder, start the server locally and then use `pytest -v` to execute the unit tests.
+In the root folder, start the server locally and then use `tox -e py310` to
+execute the unit tests.
 
 ## Endpoint documentation :scroll:
 
