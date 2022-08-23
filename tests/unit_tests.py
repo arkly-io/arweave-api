@@ -4,7 +4,9 @@ tox -e linting
 """
 import pytest
 import requests
+
 response = requests.get("http://127.0.0.1:8000/")
+
 
 def test_check_balance():
     """Testing the check_balance endpoint"""
@@ -13,6 +15,7 @@ def test_check_balance():
         req = requests.post(url="http://127.0.0.1:8000/check_balance/", files=files)
         # self.assertNotEqual(req.text, None)
         assert req.text != None
+
 
 def test_check_last_transaction():
     """Testing the check_last_transaction endpoint"""
@@ -24,6 +27,7 @@ def test_check_last_transaction():
         # self.assertNotEqual(req.text, None)
         assert req.text != None
 
+
 def test_fetch_upload():
     """Testing the fetch_upload route"""
     data = {"transaction_id": "cZiaojZtzyL1ZB7GjbWLbj62S_9pxPDHu61HQvSYgD0"}
@@ -31,6 +35,7 @@ def test_fetch_upload():
     print(req.content)
     # self.assertNotEqual(req.content, None)
     assert req.text != None
+
 
 def test_create_transaction():
     """Testing out the create_transaction endpoint"""
