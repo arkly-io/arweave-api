@@ -13,6 +13,7 @@ from typing import Final, List
 
 import arweave
 import bagit
+import psycopg2
 import requests
 import ulid
 from arweave.arweave_lib import Transaction
@@ -92,6 +93,20 @@ def redirect_root_to_docs():
     """Redirect a user calling the API root '/' to the API
     documentation.
     """
+
+    # Update database endpoint_calls by 1
+    try:
+        connection = psycopg2.connect(
+            user="arkly", host="/var/run/postgresql/", database="arkly", port=5432
+        )
+        cursor = connection.cursor()
+        update_endpoint_count = """UPDATE endpoint_calls
+                                        SET root = root + 1"""
+        cursor.execute(update_endpoint_count)
+        connection.commit()
+        cursor.close()
+    except psycopg2.DatabaseError as error:
+        print(error)
     return RedirectResponse(url="/docs")
 
 
@@ -103,6 +118,20 @@ async def check_balance(file: UploadFile = File(...)):
     :return: The balance of your wallet as a JSON object
     :rtype: JSON object
     """
+
+    # Update database endpoint_calls by 1
+    try:
+        connection = psycopg2.connect(
+            user="arkly", host="/var/run/postgresql/", database="arkly", port=5432
+        )
+        cursor = connection.cursor()
+        update_endpoint_count = """UPDATE endpoint_calls
+                                        SET check_balance = check_balance + 1"""
+        cursor.execute(update_endpoint_count)
+        connection.commit()
+        cursor.close()
+    except psycopg2.DatabaseError as error:
+        print(error)
     jwk_file = file
     wallet = await create_temp_wallet(jwk_file)
     if wallet != "Error":
@@ -119,6 +148,20 @@ async def check_last_transaction(file: UploadFile = File(...)):
     :return: The transaction id as a JSON object
     :rtype: JSON object
     """
+
+    # Update database endpoint_calls by 1
+    try:
+        connection = psycopg2.connect(
+            user="arkly", host="/var/run/postgresql/", database="arkly", port=5432
+        )
+        cursor = connection.cursor()
+        update_endpoint_count = """UPDATE endpoint_calls
+                                        SET check_last_transaction = check_last_transaction + 1"""
+        cursor.execute(update_endpoint_count)
+        connection.commit()
+        cursor.close()
+    except psycopg2.DatabaseError as error:
+        print(error)
     wallet = await create_temp_wallet(file)
     if wallet != "Error":
         # print(wallet)
@@ -135,6 +178,20 @@ def fetch_upload(transaction_id: str):
     :return: The compressed file upload
     :rtype: File Object
     """
+
+    # Update database endpoint_calls by 1
+    try:
+        connection = psycopg2.connect(
+            user="arkly", host="/var/run/postgresql/", database="arkly", port=5432
+        )
+        cursor = connection.cursor()
+        update_endpoint_count = """UPDATE endpoint_calls
+                                        SET fetch_upload = fetch_upload + 1"""
+        cursor.execute(update_endpoint_count)
+        connection.commit()
+        cursor.close()
+    except psycopg2.DatabaseError as error:
+        print(error)
     url = "http://arweave.net/" + transaction_id
     try:
         # f = urllib.request.urlopen(url)
@@ -221,6 +278,20 @@ async def create_transaction(files: List[UploadFile] = File(...)):
           Arweave price.
     """
 
+    # Update database endpoint_calls by 1
+    try:
+        connection = psycopg2.connect(
+            user="arkly", host="/var/run/postgresql/", database="arkly", port=5432
+        )
+        cursor = connection.cursor()
+        update_endpoint_count = """UPDATE endpoint_calls
+                                        SET create_transaction = create_transaction + 1"""
+        cursor.execute(update_endpoint_count)
+        connection.commit()
+        cursor.close()
+    except psycopg2.DatabaseError as error:
+        print(error)
+
     for file in files:
         wallet = await create_temp_wallet(file)
         if wallet != "Error":
@@ -281,6 +352,20 @@ def _get_arweave_urls_from_tx(transaction_id):
 @app.get("/validate_arweave_bag/", tags=[TAG_ARKLY])
 async def validate_bag(transaction_id: str, response: Response):
     """Given an Arweave transaction ID, Validate an Arkly link as a bag."""
+
+    # Update database endpoint_calls by 1
+    try:
+        connection = psycopg2.connect(
+            user="arkly", host="/var/run/postgresql/", database="arkly", port=5432
+        )
+        cursor = connection.cursor()
+        update_endpoint_count = """UPDATE endpoint_calls
+                                        SET validate_arweave_bag = validate_arweave_bag + 1"""
+        cursor.execute(update_endpoint_count)
+        connection.commit()
+        cursor.close()
+    except psycopg2.DatabaseError as error:
+        print(error)
 
     # Setup retrieval of the data from the given transaction.
     transaction_url, arweave_url = _get_arweave_urls_from_tx(transaction_id)

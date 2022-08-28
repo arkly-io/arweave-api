@@ -2,9 +2,11 @@
 To lint use:
 tox -e linting
 """
-import pytest
+# import pytest
 import requests
+
 response = requests.get("http://127.0.0.1:8000/")
+
 
 def test_check_balance():
     """Testing the check_balance endpoint"""
@@ -12,7 +14,8 @@ def test_check_balance():
         files = {"file": ("myWallet.json", my_file)}
         req = requests.post(url="http://127.0.0.1:8000/check_balance/", files=files)
         # self.assertNotEqual(req.text, None)
-        assert req.text != None
+        assert req.text is not None
+
 
 def test_check_last_transaction():
     """Testing the check_last_transaction endpoint"""
@@ -22,7 +25,8 @@ def test_check_last_transaction():
             url="http://127.0.0.1:8000/check_last_transaction/", files=files
         )
         # self.assertNotEqual(req.text, None)
-        assert req.text != None
+        assert req.text is not None
+
 
 def test_fetch_upload():
     """Testing the fetch_upload route"""
@@ -30,7 +34,8 @@ def test_fetch_upload():
     req = requests.get(url="http://127.0.0.1:8000/fetch_upload/", params=data)
     print(req.content)
     # self.assertNotEqual(req.content, None)
-    assert req.text != None
+    assert req.text is not None
+
 
 def test_create_transaction():
     """Testing out the create_transaction endpoint"""
@@ -44,7 +49,7 @@ def test_create_transaction():
                 url="http://127.0.0.1:8000/create_transaction/", files=files
             )
             # self.assertNotEqual(req.text, None)
-            assert req.text != None
+            assert req.text is not None
 
 
 # def unit_tests():
