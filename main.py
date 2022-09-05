@@ -173,16 +173,21 @@ def fetch_upload(transaction_id: str):
         # f = urllib.request.urlopen(url)
         # data = f.read()
         # Create a fetching folder
-        try:
-            os.mkdir("fetching")
-        except FileExistsError:
-            pass
+
+        # Create a temporary directory for our fetch data. Mkdtemp does this in
+        # the most secure way possible.
+        tmp_dir = tempfile.mkdtemp()
+        fetch_dir = tmp_dir / Path(f"{transaction_id}.tar.gz")
+
+        print(f"Fetch writing to {fetch_dir}", file=sys.stderr)
+
         with urllib.request.urlopen(url) as response, open(
-            "fetching/" + transaction_id + ".gz", "wb"
+            str(fetch_dir), "wb"
         ) as out_file:
             file_header = response.read()
             out_file.write(file_header)
-            return FileResponse("fetching/" + transaction_id + ".gz")
+            return FileResponse(str(fetch_dir))
+
         # data = f.read()
     except urllib.request.HTTPError as err:
         raise HTTPException from err
@@ -260,15 +265,9 @@ async def create_transaction(files: List[UploadFile] = File(...)):
             files.remove(file)
             break
     if wallet != "Error":
-        # wallet.address
-        # Try to create a folder for their wallet
-        # All file uploads for transactions will be held under the users
-        # Profile.
-        try:
-            os.mkdir(wallet.address)
-        except FileExistsError:
-            pass
 
+        # Create a package from files array. Package content will create
+        # this in a secure temporary directory.
         tar_file_name = await package_content(files)
 
         print("Adding version to package:", tar_file_name, file=sys.stderr)
