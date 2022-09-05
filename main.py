@@ -210,10 +210,8 @@ async def package_content(files):
     """Package the files submitted to the create_transaction endpoint."""
     # Create a folder for the user's wallet.
     tmp_dir = tempfile.mkdtemp()
-    tmp_name = tmp_dir
-
     package_ulid = str(ulid.new())
-    file_path = Path(tmp_name, package_ulid)
+    file_path = Path(tmp_dir, package_ulid)
     file_path.mkdir()
 
     print("Location to write object to:", file_path, file=sys.stderr)
