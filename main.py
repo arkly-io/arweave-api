@@ -170,9 +170,6 @@ def fetch_upload(transaction_id: str):
     """
     url = "http://arweave.net/" + transaction_id
     try:
-        # f = urllib.request.urlopen(url)
-        # data = f.read()
-        # Create a fetching folder
 
         # Create a temporary directory for our fetch data. Mkdtemp does this in
         # the most secure way possible.
@@ -188,7 +185,6 @@ def fetch_upload(transaction_id: str):
             out_file.write(file_header)
             return FileResponse(str(fetch_dir))
 
-        # data = f.read()
     except urllib.request.HTTPError as err:
         raise HTTPException from err
         # raise HTTPException(
