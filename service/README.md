@@ -23,13 +23,25 @@ The `install-service.sh` script will:
 * Restart: `service arkly-arweave-api restart`.
 * Status: `service arkly-arweave-api status`.
 
+## Monitoring
+
+To monitor the service (follow along with output from the service), the output
+can be found in `journalctl`.
+
+* `journalctl -f -u arkly-arweave-api`
+
+To access historical logs, omit the `-f` and run:
+
+* `journalctl -u arkly-arweave-api`
+
 ## Debugging
 
-The script doesn't install new python requirements. If a requirement has been
-added or updated, then you will need to install that into the environment
-yourself, e.g. from the root of this repository
-`python -m pip install -r requirements/requirements.txt`. If the server doesn't
-start as anticipated, you may need to update these.
+The `journalctl` output is the first place to look. It should show the root
+cause, e.g. as the service installation script doesn't install new pypi
+requirements, and the service won't start properly, module import errors should
+show up in `journalctl`. To fix that particular issue, run
+`python -m pip install -r requirements/requirements.txt` from the root of this
+repository.
 
 ## Information about systemd
 
