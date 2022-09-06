@@ -28,6 +28,7 @@ ignore-patterns=
 ignore-paths=
 	requirements/*,
 	.github/,
+	tests/fixtures/vcrpy/*,
 
 [MESSAGES CONTROL]
 

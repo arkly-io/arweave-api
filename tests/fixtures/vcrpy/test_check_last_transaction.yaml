@@ -1,0 +1,36 @@
+interactions:
+- request:
+    body: 'substitute: my_wallet.json -- form-data'
+    headers:
+      Accept:
+      - '*/*'
+      Accept-Encoding:
+      - gzip, deflate
+      Connection:
+      - keep-alive
+      Content-Length:
+      - '3301'
+      Content-Type:
+      - multipart/form-data; boundary=fd53c43c814ee7662daa9b6353d62814
+      User-Agent:
+      - python-requests/2.28.1
+    method: POST
+    uri: https://api.arkly.io/check_last_transaction/
+  response:
+    body:
+      string: '{"last_transaction_id":"0HGH-0yZnk1CUTLSr7jrUeNm-03RBpz8JWY66aUHqQ8CzTqLZmOlMqxHyDu69ncZ"}'
+    headers:
+      Connection:
+      - keep-alive
+      Content-Length:
+      - '90'
+      Content-Type:
+      - application/json
+      Date:
+      - Thu, 01 Sep 2022 18:42:37 GMT
+      Server:
+      - nginx/1.18.0 (Ubuntu)
+    status:
+      code: 200
+      message: OK
+version: 1

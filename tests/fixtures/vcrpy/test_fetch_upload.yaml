@@ -1,0 +1,32 @@
+interactions:
+- request:
+    body: 'substitute: my_wallet.json -- form-data'
+    headers:
+      Accept:
+      - '*/*'
+      Accept-Encoding:
+      - gzip, deflate
+      Connection:
+      - keep-alive
+      User-Agent:
+      - python-requests/2.28.1
+    method: GET
+    uri: https://api.arkly.io/fetch_upload/?transaction_id=cZiaojZtzyL1ZB7GjbWLbj62S_9pxPDHu61HQvSYgD0
+  response:
+    body:
+      string: Internal Server Error
+    headers:
+      Connection:
+      - keep-alive
+      Content-Length:
+      - '21'
+      Content-Type:
+      - text/plain; charset=utf-8
+      Date:
+      - Thu, 01 Sep 2022 18:59:20 GMT
+      Server:
+      - nginx/1.18.0 (Ubuntu)
+    status:
+      code: 500
+      message: Internal Server Error
+version: 1

@@ -6,3 +6,4 @@ isort==5.10.1
 pylint==2.14.5
 pytest==7.1.2
 tox==3.25.1
+vcrpy==4.2.0
