@@ -152,14 +152,15 @@ def fetch_upload(transaction_id: str):
             return FileResponse("fetching/" + transaction_id + ".gz")
         # data = f.read()
     except urllib.request.HTTPError as err:
-        raise HTTPException(
-            status_code=404,
-            detail=(
-                "Failed to get file. "
-                + err.reason
-                + " Insure transaction id is valid, and try again."
-            ),
-        )
+        raise HTTPException from err
+        # raise HTTPException(
+        #     status_code=404,
+        #     detail=(
+        #         "Failed to get file. "
+        #         + err.reason
+        #         + " Insure transaction id is valid, and try again."
+        #     ),
+        # )
 
 
 async def bag_files(path: Path) -> None:
