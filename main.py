@@ -10,7 +10,6 @@ import tempfile
 import urllib.request
 from pathlib import Path
 from typing import Final, List
-import time
 
 import arweave
 import bagit
@@ -19,7 +18,7 @@ import requests
 import ulid
 from arweave.arweave_lib import Transaction
 from arweave.transaction_uploader import get_uploader
-from fastapi import FastAPI, File, HTTPException, Response, UploadFile, status, Request
+from fastapi import FastAPI, File, HTTPException, Request, Response, UploadFile, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, RedirectResponse
 
@@ -85,14 +84,21 @@ app.add_middleware(
 
 @app.middleware("http")
 async def update_db(request: Request, call_next):
-    the_headers = request.headers
-    #Represents which endpoint is trying to be accessed
-    path = str(request.scope['path'])
-    endpoints = ["/docs", "/check_balance/", "/check_last_transaction/", "/create_transaction/", "/fetch_upload/", "/validate_arweave_bag/"]
+    """Middleware used to identify which endpoint is being used so that the database can be updated effectively"""
+    # Represents which endpoint is trying to be accessed
+    path = str(request.scope["path"])
+    endpoints = [
+        "/docs",
+        "/check_balance/",
+        "/check_last_transaction/",
+        "/create_transaction/",
+        "/fetch_upload/",
+        "/validate_arweave_bag/",
+    ]
     # Update database endpoint_calls by 1
     if path in endpoints:
         if path == "/docs":
-            path == "root"
+            path = "root"
         else:
             # Remove first and last character
             path = path[1:-1]
@@ -102,7 +108,9 @@ async def update_db(request: Request, call_next):
             )
             cursor = connection.cursor()
             update_endpoint_count = """UPDATE endpoint_calls
-                                            SET {update_db_endpoint} = {update_db_endpoint} + 1""".format(update_db_endpoint=path)
+                                            SET {update_db_endpoint} = {update_db_endpoint} + 1""".format(
+                update_db_endpoint=path
+            )
             cursor.execute(update_endpoint_count)
             connection.commit()
             cursor.close()
