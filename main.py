@@ -155,7 +155,9 @@ async def check_last_transaction(file: UploadFile = File(...)):
     wallet = await create_temp_wallet(file)
     if wallet != "Error":
         # print(wallet)
-        last_transaction = requests.get(f"https://arweave.net/wallet/{wallet.address}/last_tx")
+        last_transaction = requests.get(
+            f"https://arweave.net/wallet/{wallet.address}/last_tx"
+        )
         return {"last_transaction_id": last_transaction.text}
     return {"last_transaction_id": "Failure to get response..."}
 
