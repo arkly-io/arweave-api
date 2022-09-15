@@ -71,7 +71,7 @@ def test_estimate_transaction_cost():
     """Testing the estimate_transaction_cost endpoint"""
     data = {"size_in_bytes": "10000000000"}
     req = requests.post(
-        url="http://api.arkly.io/estimate_transaction_cost/", params=data
+        url="https://api.arkly.io/estimate_transaction_cost/", params=data
     )
     # self.assertNotEqual(req.text, None)
     json_response = json.loads(req.text)
