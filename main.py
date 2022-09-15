@@ -162,6 +162,22 @@ async def check_last_transaction(file: UploadFile = File(...)):
     return {"last_transaction_id": "Failure to get response..."}
 
 
+@app.post("/estimate_transaction_cost/", tags=[TAG_ARWEAVE])
+async def estimate_transaction_cost(size_in_bytes: str):
+    """Allows a user to get an estimate of how much a transaction may cost
+    :param size_in_bytes: A string which is an integer that represents the number of bytes to be uploaded
+    :type size_in_bytes: str
+    :return: The estimated cost of the transaction
+    :rtype: JSON object
+    """
+    if size_in_bytes.isdigit():
+        cost_estimate = requests.get(f"https://arweave.net/price/{size_in_bytes}/")
+        return {"estimate_transaction_cost": cost_estimate.text}
+    return {
+        "estimate_transaction_cost": "Parameter issue. Please enter a valid amount of bytes as an integer."
+    }
+
+
 @app.get("/fetch_upload/")
 def fetch_upload(transaction_id: str):
     """Allows a user to read their file upload from the Arweave blockchain
