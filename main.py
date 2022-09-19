@@ -174,7 +174,7 @@ async def check_transaction_status(transaction_id: str):
         transaction_status = requests.get(
             f"https://arweave.net/tx/{transaction_id}/status"
         )
-        return {"transaction_status": f"{transaction_status}"}
+        return {"transaction_status": f"{transaction_status.text}"}
     return {
         "transaction_status": "Parameter issue. Please enter a valid transaction id."
     }
@@ -190,7 +190,18 @@ async def estimate_transaction_cost(size_in_bytes: str):
     """
     if size_in_bytes.isdigit():
         cost_estimate = requests.get(f"https://arweave.net/price/{size_in_bytes}/")
-        return {"estimate_transaction_cost": cost_estimate.text}
+        length = len(cost_estimate.text)
+        if length > 12:
+            past_twelve = length - 12
+            winston_str = (
+                f"{cost_estimate.text[0:past_twelve]}.{cost_estimate.text[-12:]}"
+            )
+        else:
+            lessthan_twelve = 12 - length
+            less_than_format = "0" * lessthan_twelve
+            winston_str = f"0.{less_than_format}{cost_estimate.text}"
+            print(winston_str)
+        return {"estimate_transaction_cost": winston_str}
     return {
         "estimate_transaction_cost": "Parameter issue. Please enter a valid amount of bytes as an integer."
     }
