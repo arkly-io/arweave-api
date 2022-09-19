@@ -73,7 +73,7 @@ def test_estimate_transaction_cost():
     arweave_vcr = vcr.VCR(before_record_request=_scrub_wallet_data())
     with arweave_vcr.use_cassette(
         str(VCR_FIXTURES_PATH / Path("test_estimate_transaction_cost.yaml"))
-    ):    
+    ):
         data = {"size_in_bytes": "10000000000"}
         req = requests.post(
             url="https://api.arkly.io/estimate_transaction_cost/", params=data
@@ -85,13 +85,14 @@ def test_estimate_transaction_cost():
             != "Parameter issue. Please enter a valid amount of bytes as an integer."
         )
 
+
 def test_check_transaction_status():
     """Testing the estimate_transaction_cost endpoint"""
     arweave_vcr = vcr.VCR(before_record_request=_scrub_wallet_data())
     with arweave_vcr.use_cassette(
         str(VCR_FIXTURES_PATH / Path("test_check_transaction_status.yaml"))
     ):
-        data = {"id": "cZiaojZtzyL1ZB7GjbWLbj62S_9pxPDHu61HQvSYgD0"}
+        data = {"transaction_id": "cZiaojZtzyL1ZB7GjbWLbj62S_9pxPDHu61HQvSYgD0"}
         req = requests.post(
             url="https://api.arkly.io/check_transaction_status/", params=data
         )

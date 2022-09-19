@@ -161,17 +161,18 @@ async def check_last_transaction(file: UploadFile = File(...)):
         return {"last_transaction_id": last_transaction.text}
     return {"last_transaction_id": "Failure to get response..."}
 
+
 @app.post("/check_transaction_status/", tags=[TAG_ARWEAVE])
-async def check_transaction_status(id: str):
+async def check_transaction_status(transaction_id: str):
     """Allows a user to check the transaction id of their last transaction
     :param file: JWK file, defaults to File(...)
     :type file: UploadFile, optional
     :return: The transaction id as a JSON object
     :rtype: JSON object
     """
-    if len(id) == 43:
+    if len(transaction_id) == 43:
         transaction_status = requests.get(
-            f"https://arweave.net/tx/{id}/status"
+            f"https://arweave.net/tx/{transaction_id}/status"
         )
         return {"transaction_status": f"{transaction_status}"}
     return {
