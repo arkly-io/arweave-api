@@ -13,7 +13,7 @@ interactions:
       User-Agent:
       - python-requests/2.28.1
     method: POST
-    uri: http://127.0.0.1:8000/check_transaction_status/?transaction_id=cZiaojZtzyL1ZB7GjbWLbj62S_9pxPDHu61HQvSYgD0
+    uri: https://api.arkly.io/check_transaction_status/?transaction_id=cZiaojZtzyL1ZB7GjbWLbj62S_9pxPDHu61HQvSYgD0
   response:
     body:
       string: '{"transaction_status":"{\"block_height\":996347,\"block_indep_hash\":\"dY4cRXBnrH3bhqEZnhqpveywsx5kFqrinysBcXc1OO2wx7Ys74_6rS2P2yRvdI7s\",\"number_of_confirmations\":23499}"}'

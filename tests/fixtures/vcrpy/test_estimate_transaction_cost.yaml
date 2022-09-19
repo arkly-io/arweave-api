@@ -13,19 +13,21 @@ interactions:
       User-Agent:
       - python-requests/2.28.1
     method: POST
-    uri: http://127.0.0.1:8000/estimate_transaction_cost/?size_in_bytes=10000000000
+    uri: https://api.arkly.io/estimate_transaction_cost/?size_in_bytes=10000000000
   response:
     body:
       string: '{"estimate_transaction_cost":"2.040002117112"}'
     headers:
-      content-length:
+      Connection:
+      - keep-alive
+      Content-Length:
       - '46'
-      content-type:
+      Content-Type:
       - application/json
-      date:
-      - Mon, 19 Sep 2022 20:46:47 GMT
-      server:
-      - uvicorn
+      Date:
+      - Mon, 19 Sep 2022 20:52:16 GMT
+      Server:
+      - nginx/1.18.0 (Ubuntu)
     status:
       code: 200
       message: OK
