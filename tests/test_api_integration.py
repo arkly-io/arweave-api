@@ -41,14 +41,10 @@ def test_check_balance():
     ):
         with open(str(WALLET_NAME), "rb") as my_file:
             files = {"file": (str(WALLET_NAME), my_file)}
-            req = requests.post(url="https://api.arkly.io/check_balance/", files=files)
+            req = requests.post(url="http://127.0.0.1:8000/check_balance/", files=files)
             # self.assertNotEqual(req.text, None)
             json_response = json.loads(req.text)
-            if "balance" in json_response.keys():
-                assert isinstance(json_response["balance"], float)
-            # assert json_response == "balance" and assert
-            else:
-                assert False
+            assert isinstance(json_response["balance"], float)
 
 
 def test_check_last_transaction():
@@ -60,9 +56,8 @@ def test_check_last_transaction():
         with open(str(WALLET_NAME), "rb") as my_file:
             files = {"file": (str(WALLET_NAME), my_file)}
             req = requests.post(
-                url="https://api.arkly.io/check_last_transaction/", files=files
+                url="http://127.0.0.1:8000/check_last_transaction/", files=files
             )
-            # self.assertNotEqual(req.text, None)
             json_response = json.loads(req.text)
             assert json_response["last_transaction_id"] != "Failure to get response..."
 

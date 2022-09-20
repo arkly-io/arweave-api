@@ -9,27 +9,25 @@ interactions:
       Connection:
       - keep-alive
       Content-Length:
-      - '3301'
+      - '3339'
       Content-Type:
-      - multipart/form-data; boundary=3f123b878101d9178109e7118cf737fd
+      - multipart/form-data; boundary=b5074196eef164d7554028b54ce01f96
       User-Agent:
       - python-requests/2.28.1
     method: POST
-    uri: https://api.arkly.io/check_balance/
+    uri: http://127.0.0.1:8000/check_balance/
   response:
     body:
-      string: '{"balance":9.717457361992}'
+      string: '{"balance":0.019137068801}'
     headers:
-      Connection:
-      - keep-alive
-      Content-Length:
+      content-length:
       - '26'
-      Content-Type:
+      content-type:
       - application/json
-      Date:
-      - Thu, 01 Sep 2022 18:07:17 GMT
-      Server:
-      - nginx/1.18.0 (Ubuntu)
+      date:
+      - Tue, 20 Sep 2022 17:17:41 GMT
+      server:
+      - uvicorn
     status:
       code: 200
       message: OK
