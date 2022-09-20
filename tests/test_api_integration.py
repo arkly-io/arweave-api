@@ -1,7 +1,4 @@
-""" Arkly Arweave API Unit tests
-To lint use:
-tox -e linting
-"""
+"""Arkly Arweave API integration tests"""
 
 import json
 from pathlib import Path
