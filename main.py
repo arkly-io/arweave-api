@@ -4,7 +4,6 @@ This module is an Arweave FastAPI server that allows users to
 communicate with Arweave, and put Arkly files on chain.
 """
 import base64
-import json
 import os
 import os.path
 import sys
@@ -15,9 +14,7 @@ from io import BytesIO
 from pathlib import Path
 from typing import Final, List
 
-import arweave
 import bagit
-import psycopg2
 import requests
 import ulid
 from arweave.arweave_lib import Transaction
@@ -37,6 +34,12 @@ from fastapi.responses import FileResponse, RedirectResponse
 from pydantic import BaseModel
 
 from arweave_utilities import winston_to_ar
+from middleware import _update_db
+from primary_functions import (
+    _check_balance,
+    _check_last_transaction,
+    create_temp_wallet,
+)
 
 # Arkly-arweave API description.
 API_DESCRIPTION: Final[str] = " "
@@ -53,24 +56,6 @@ tags_metadata = [
         "description": "Manage Arweave transactions",
     },
 ]
-
-
-async def create_temp_wallet(file):
-    """A function that created a wallet object to be used in various API calls
-
-    :param file: JWK file, defaults to File(...)
-    :type file: JSON
-    :return: Wallet object
-    :rtype: _type_
-    """
-    hold = await file.read()
-    json_obj = json.loads(hold)
-    wallet = arweave.Wallet.from_data(json_obj)
-    if wallet is None:
-        print("Wallet object not made. Try another wallet, or try again.")
-        return "Error"
-    return wallet
-
 
 app = FastAPI(
     title="api.arkly.io",
@@ -94,40 +79,10 @@ app.add_middleware(
 
 @app.middleware("http")
 async def update_db(request: Request, call_next):
-    """Middleware used to identify which endpoint is being used so that the database can be updated effectively"""
-    # Represents which endpoint is trying to be accessed
-    path = str(request.scope["path"])
-    endpoints = [
-        "/docs",
-        "/check_balance/",
-        "/check_last_transaction/",
-        "/create_transaction/",
-        "/fetch_upload/",
-        "/validate_arweave_bag/",
-    ]
-    # Update database endpoint_calls by 1
-    if path in endpoints:
-        if path == "/docs":
-            path = "root"
-        else:
-            # Remove first and last character
-            path = path[1:-1]
-        try:
-            connection = psycopg2.connect(
-                user="arkly", host="/var/run/postgresql/", database="arkly", port=5432
-            )
-            cursor = connection.cursor()
-            update_endpoint_count = """UPDATE endpoint_calls
-                                            SET {update_db_endpoint} = {update_db_endpoint} + 1""".format(
-                update_db_endpoint=path
-            )
-            cursor.execute(update_endpoint_count)
-            connection.commit()
-            cursor.close()
-        except psycopg2.DatabaseError as error:
-            print(error)
-    response = await call_next(request)
-    return response
+    """Middleware used to identify which endpoint is being used so that
+    the database can be updated effectively.
+    """
+    return await _update_db(request, call_next)
 
 
 @app.get("/", include_in_schema=False)
@@ -138,45 +93,18 @@ def redirect_root_to_docs():
     return RedirectResponse(url="/docs")
 
 
-async def _check_balance(file: UploadFile = File(...)):
-    """Checks to balance of the given Arweave wallet with the Arweave
-    server.
-    """
-    jwk_file = file
-    wallet = await create_temp_wallet(jwk_file)
-    if wallet != "Error":
-        balance = wallet.balance
-        return {"balance": balance}
-    return {"balance": "Error on wallet load."}
-
-
 @app.post("/check_balance/", tags=[TAG_ARWEAVE])
 async def check_balance(file: UploadFile = File(...)):
-    """Allows a user to check the balance of their wallet
-    :param file: JWK file, defaults to File(...)
-    :type file: JSON
-    :return: The balance of your wallet as a JSON object
-    :rtype: JSON object
-    """
+    """Allows a user to check the balance of their wallet."""
     return await _check_balance(file)
 
 
 @app.post("/check_last_transaction/", tags=[TAG_ARWEAVE])
 async def check_last_transaction(file: UploadFile = File(...)):
-    """Allows a user to check the transaction id of their last transaction
-    :param file: JWK file, defaults to File(...)
-    :type file: UploadFile, optional
-    :return: The transaction id as a JSON object
-    :rtype: JSON object
+    """Allows a user to check the transaction id of their last
+    transaction.
     """
-    wallet = await create_temp_wallet(file)
-    if wallet != "Error":
-        # print(wallet)
-        last_transaction = requests.get(
-            f"https://arweave.net/wallet/{wallet.address}/last_tx"
-        )
-        return {"last_transaction_id": last_transaction.text}
-    return {"last_transaction_id": "Failure to get response..."}
+    return await _check_last_transaction(file)
 
 
 @app.post("/check_transaction_status/", tags=[TAG_ARWEAVE])

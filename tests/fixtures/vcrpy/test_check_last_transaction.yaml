@@ -9,27 +9,25 @@ interactions:
       Connection:
       - keep-alive
       Content-Length:
-      - '3301'
+      - '3339'
       Content-Type:
-      - multipart/form-data; boundary=fd53c43c814ee7662daa9b6353d62814
+      - multipart/form-data; boundary=a58d7a2f0b23b10616e10c5aea0ba87c
       User-Agent:
       - python-requests/2.28.1
     method: POST
-    uri: https://api.arkly.io/check_last_transaction/
+    uri: http://127.0.0.1:8000/check_last_transaction/
   response:
     body:
-      string: '{"last_transaction_id":"0HGH-0yZnk1CUTLSr7jrUeNm-03RBpz8JWY66aUHqQ8CzTqLZmOlMqxHyDu69ncZ"}'
+      string: '{"last_transaction_id":"HuymwM4PaqZmhytJgZiYcctvDkg14oz5DLRChYkGTcM"}'
     headers:
-      Connection:
-      - keep-alive
-      Content-Length:
-      - '90'
-      Content-Type:
+      content-length:
+      - '69'
+      content-type:
       - application/json
-      Date:
-      - Thu, 01 Sep 2022 18:42:37 GMT
-      Server:
-      - nginx/1.18.0 (Ubuntu)
+      date:
+      - Tue, 20 Sep 2022 17:03:01 GMT
+      server:
+      - uvicorn
     status:
       code: 200
       message: OK
