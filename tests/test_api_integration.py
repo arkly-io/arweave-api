@@ -123,7 +123,7 @@ def test_create_transaction():
                     ("files", sample_file),
                 ]
                 req = requests.post(
-                    url="https://api.arkly.io/create_transaction/", files=files
+                    url="http://127.0.0.1:8000/create_transaction/", files=files
                 )
                 # self.assertNotEqual(req.text, None)
                 assert req.text is not None
