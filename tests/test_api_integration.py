@@ -167,3 +167,32 @@ def test_create_transaction_form():
                         json=data,
                     )
                     assert req.text is not None
+
+
+def test_validate_bag_valid_bag():
+    """Ensure that validate arweave bag works as anticipated."""
+    arweave_vcr = vcr.VCR(before_record_request=_scrub_wallet_data())
+    with arweave_vcr.use_cassette(
+        str(VCR_FIXTURES_PATH / Path("test_validate_arweave_bag_valid_bag.yaml"))
+    ):
+        data = {"transaction_id": "4vRsZM1JR491HJFPm_Nx08a7kp1_dJrc_sZC1X6afbg"}
+        req = requests.get(
+            url="http://127.0.0.1:8000/validate_arweave_bag/", params=data
+        )
+        for item in ("transaction_url", "file_url", "valid", "bag_info"):
+            assert item in req.text
+
+
+def test_validate_bag_invalid_bag():
+    """Ensure that validate arweave bag works as anticipated."""
+    arweave_vcr = vcr.VCR(before_record_request=_scrub_wallet_data())
+    with arweave_vcr.use_cassette(
+        str(VCR_FIXTURES_PATH / Path("test_validate_arweave_bag_invalid_bag.yaml"))
+    ):
+        data = {"transaction_id": "8zItHEd6sUbK8fop6KquIu6jEyu49kLgiZ73O7xu2OE"}
+        req = requests.get(
+            url="http://127.0.0.1:8000/validate_arweave_bag/", params=data
+        )
+        for item in ("transaction_url", "file_url", "valid"):
+            assert item in req.text
+        assert json.loads(req.text)["valid"] == "UNKNOWN"

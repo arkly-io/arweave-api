@@ -1,0 +1,32 @@
+interactions:
+- request:
+    body: 'substitute: my_wallet.json -- form-data'
+    headers:
+      Accept:
+      - '*/*'
+      Accept-Encoding:
+      - gzip, deflate
+      Connection:
+      - keep-alive
+      User-Agent:
+      - python-requests/2.28.1
+    method: GET
+    uri: http://127.0.0.1:8000/validate_arweave_bag/?transaction_id=4vRsZM1JR491HJFPm_Nx08a7kp1_dJrc_sZC1X6afbg
+  response:
+    body:
+      string: '{"transaction_url":"https://viewblock.io/arweave/tx/4vRsZM1JR491HJFPm_Nx08a7kp1_dJrc_sZC1X6afbg","file_url":"https://arweave.net/4vRsZM1JR491HJFPm_Nx08a7kp1_dJrc_sZC1X6afbg","valid":"True","bag_info":{"Bag-Software-Agent":"bagit.py
+        v1.8.1 <https://github.com/LibraryOfCongress/bagit-python>","Bagging-Date":"2022-09-21","Payload-Oxum":"35.2","Random
+        Data":"arkly.io"},"bag_ulid":"01GDG3MXW932A7EVES47AS5AFX"}'
+    headers:
+      content-length:
+      - '408'
+      content-type:
+      - application/json
+      date:
+      - Wed, 21 Sep 2022 13:50:03 GMT
+      server:
+      - uvicorn
+    status:
+      code: 200
+      message: OK
+version: 1
