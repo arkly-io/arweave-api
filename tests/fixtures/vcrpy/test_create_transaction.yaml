@@ -9,28 +9,26 @@ interactions:
       Connection:
       - keep-alive
       Content-Length:
-      - '75555'
+      - '3461'
       Content-Type:
-      - multipart/form-data; boundary=dcb96b85b2a942718b2124a8bd05b142
+      - multipart/form-data; boundary=d9ffa979ed42f83af5fa55f62daee98e
       User-Agent:
       - python-requests/2.28.1
     method: POST
-    uri: https://api.arkly.io/create_transaction/
+    uri: http://127.0.0.1:8000/create_transaction/
   response:
     body:
-      string: Internal Server Error
+      string: '{"transaction_id":"vfLPsAJBxyzrv6jkdZenJjsdxNmh7LL-enqSAd-s3ws","transaction_link":"https://viewblock.io/arweave/tx/vfLPsAJBxyzrv6jkdZenJjsdxNmh7LL-enqSAd-s3ws","transaction_status":"PENDING","wallet_balance":"0.018926908434"}'
     headers:
-      Connection:
-      - keep-alive
-      Content-Length:
-      - '21'
-      Content-Type:
-      - text/plain; charset=utf-8
-      Date:
-      - Thu, 01 Sep 2022 18:59:21 GMT
-      Server:
-      - nginx/1.18.0 (Ubuntu)
+      content-length:
+      - '226'
+      content-type:
+      - application/json
+      date:
+      - Wed, 21 Sep 2022 13:27:17 GMT
+      server:
+      - uvicorn
     status:
-      code: 500
-      message: Internal Server Error
+      code: 200
+      message: OK
 version: 1
