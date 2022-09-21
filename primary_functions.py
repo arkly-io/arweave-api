@@ -59,3 +59,22 @@ async def _check_last_transaction(file):
         )
         return {"last_transaction_id": last_transaction.text}
     return {"last_transaction_id": "Failure to get response..."}
+
+
+async def _check_transaction_status(transaction_id: int):
+    """Allows a user to check the transaction id of their last
+    transaction.
+
+    :param file: JWK file, defaults to File(...)
+    :type file: UploadFile, optional
+    :return: The transaction id as a JSON object
+    :rtype: JSON object
+    """
+    if len(transaction_id) == 43:
+        transaction_status = requests.get(
+            f"https://arweave.net/tx/{transaction_id}/status"
+        )
+        return {"transaction_status": f"{transaction_status.text}"}
+    return {
+        "transaction_status": "Parameter issue. Please enter a valid transaction id."
+    }

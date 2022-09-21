@@ -8,22 +8,20 @@ interactions:
       - gzip, deflate
       Connection:
       - keep-alive
-      Content-Length:
-      - '0'
       User-Agent:
       - python-requests/2.28.1
-    method: POST
-    uri: https://api.arkly.io/check_transaction_status/?transaction_id=cZiaojZtzyL1ZB7GjbWLbj62S_9pxPDHu61HQvSYgD0
+    method: GET
+    uri: http://127.0.0.1:8000/check_transaction_status/?transaction_id=cZiaojZtzyL1ZB7GjbWLbj62S_9pxPDHu61HQvSYgD0
   response:
     body:
-      string: '{"transaction_status":"{\"block_height\":996347,\"block_indep_hash\":\"dY4cRXBnrH3bhqEZnhqpveywsx5kFqrinysBcXc1OO2wx7Ys74_6rS2P2yRvdI7s\",\"number_of_confirmations\":23499}"}'
+      string: '{"transaction_status":"{\"block_height\":996347,\"block_indep_hash\":\"dY4cRXBnrH3bhqEZnhqpveywsx5kFq\",\"number_of_confirmations\":24156}"}'
     headers:
       content-length:
       - '174'
       content-type:
       - application/json
       date:
-      - Mon, 19 Sep 2022 20:46:47 GMT
+      - Tue, 20 Sep 2022 19:48:42 GMT
       server:
       - uvicorn
     status:
