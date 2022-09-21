@@ -1,0 +1,30 @@
+interactions:
+- request:
+    body: 'substitute: my_wallet.json -- form-data'
+    headers:
+      Accept:
+      - '*/*'
+      Accept-Encoding:
+      - gzip, deflate
+      Connection:
+      - keep-alive
+      User-Agent:
+      - python-requests/2.28.1
+    method: GET
+    uri: http://127.0.0.1:8000/validate_arweave_bag/?transaction_id=8zItHEd6sUbK8fop6KquIu6jEyu49kLgiZ73O7xu2OE
+  response:
+    body:
+      string: '{"transaction_url":"https://viewblock.io/arweave/tx/8zItHEd6sUbK8fop6KquIu6jEyu49kLgiZ73O7xu2OE","file_url":"https://arweave.net/8zItHEd6sUbK8fop6KquIu6jEyu49kLgiZ73O7xu2OE","valid":"UNKNOWN"}'
+    headers:
+      content-length:
+      - '192'
+      content-type:
+      - application/json
+      date:
+      - Wed, 21 Sep 2022 13:50:03 GMT
+      server:
+      - uvicorn
+    status:
+      code: 422
+      message: Unprocessable Entity
+version: 1
