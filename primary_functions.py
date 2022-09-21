@@ -6,9 +6,15 @@ formatted documentation.
 """
 
 import json
+import sys
+import tempfile
+import urllib
+from pathlib import Path
 
 import arweave
 import requests
+from fastapi import HTTPException
+from fastapi.responses import FileResponse
 
 
 async def create_temp_wallet(file):
@@ -107,3 +113,29 @@ async def _estimate_transaction_cost(size_in_bytes: str):
     return {
         "estimate_transaction_cost": "Parameter issue. Please enter a valid amount of bytes as an integer."
     }
+
+
+async def _fetch_upload(transaction_id: str):
+    """Allows a user to read their file upload from the Arweave
+    blockchain.
+
+    :param file: JWK file, defaults to File(...)
+    :type file: UploadFile, optional
+    :return: The compressed file upload
+    :rtype: File Object
+    """
+    url = "http://arweave.net/" + transaction_id
+    try:
+        # Create a temporary directory for our fetch data. mkdtemp does
+        # this in the most secure way possible.
+        tmp_dir = tempfile.mkdtemp()
+        fetch_dir = tmp_dir / Path(f"{transaction_id}.tar.gz")
+        print(f"Fetch writing to {fetch_dir}", file=sys.stderr)
+        with urllib.request.urlopen(url) as response, open(
+            str(fetch_dir), "wb"
+        ) as out_file:
+            file_header = response.read()
+            out_file.write(file_header)
+            return FileResponse(str(fetch_dir))
+    except urllib.request.HTTPError as err:
+        raise HTTPException from err
