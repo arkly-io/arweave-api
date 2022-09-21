@@ -78,3 +78,32 @@ async def _check_transaction_status(transaction_id: int):
     return {
         "transaction_status": "Parameter issue. Please enter a valid transaction id."
     }
+
+
+async def _estimate_transaction_cost(size_in_bytes: str):
+    """Allows a user to get an estimate of how much a transaction may
+    cost.
+
+    :param size_in_bytes: A string which is an integer that represents
+        the number of bytes to be uploaded.
+    :type size_in_bytes: str
+    :return: The estimated cost of the transaction
+    :rtype: JSON object
+    """
+    if size_in_bytes.isdigit():
+        cost_estimate = requests.get(f"https://arweave.net/price/{size_in_bytes}/")
+        length = len(cost_estimate.text)
+        if length > 12:
+            past_twelve = length - 12
+            winston_str = (
+                f"{cost_estimate.text[0:past_twelve]}.{cost_estimate.text[-12:]}"
+            )
+        else:
+            lessthan_twelve = 12 - length
+            less_than_format = "0" * lessthan_twelve
+            winston_str = f"0.{less_than_format}{cost_estimate.text}"
+            print(winston_str)
+        return {"estimate_transaction_cost": winston_str}
+    return {
+        "estimate_transaction_cost": "Parameter issue. Please enter a valid amount of bytes as an integer."
+    }

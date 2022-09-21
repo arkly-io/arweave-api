@@ -64,14 +64,13 @@ def test_check_last_transaction():
 
 def test_estimate_transaction_cost():
     """Testing the estimate_transaction_cost endpoint"""
-
     arweave_vcr = vcr.VCR(before_record_request=_scrub_wallet_data())
     with arweave_vcr.use_cassette(
         str(VCR_FIXTURES_PATH / Path("test_estimate_transaction_cost.yaml"))
     ):
         data = {"size_in_bytes": "10000000000"}
-        req = requests.post(
-            url="https://api.arkly.io/estimate_transaction_cost/", params=data
+        req = requests.get(
+            url="http://127.0.0.1:8000/estimate_transaction_cost/", params=data
         )
         # self.assertNotEqual(req.text, None)
         json_response = json.loads(req.text)
