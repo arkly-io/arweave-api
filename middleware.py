@@ -18,7 +18,9 @@ async def _update_db(request: Request, call_next: Callable):
         "/docs",
         "/check_balance/",
         "/check_last_transaction/",
+        "/check_transaction_status",
         "/create_transaction/",
+        "/estimate_traansaction_cost",
         "/fetch_upload/",
         "/validate_arweave_bag/",
     ]
