@@ -19,7 +19,7 @@ import requests
 import ulid
 from arweave.arweave_lib import Transaction
 from arweave.transaction_uploader import get_uploader
-from fastapi import File, HTTPException, UploadFile
+from fastapi import File, HTTPException, Response, UploadFile, status
 from fastapi.responses import FileResponse
 
 from arweave_utilities import winston_to_ar
@@ -230,3 +230,67 @@ async def _create_transaction(files: List[UploadFile] = File(...)):
             "wallet_balance": f"{wallet.balance}",
         }
     return {"transaction_id": "Error creating transaction."}
+
+
+def _get_arweave_urls_from_tx(transaction_id):
+    """Return a transaction URL and Arweave URL from a given Arweave
+    transaction ID.
+    """
+    return (
+        f"https://viewblock.io/arweave/tx/{transaction_id}",
+        f"https://arweave.net/{transaction_id}",
+    )
+
+
+async def _validate_bag(transaction_id: str, response: Response):
+    """Given an Arweave transaction ID, Validate an Arkly link as a bag."""
+
+    # Setup retrieval of the data from the given transaction.
+    transaction_url, arweave_url = _get_arweave_urls_from_tx(transaction_id)
+    arweave_response = requests.get(arweave_url, allow_redirects=True)
+
+    # Create temp file to extract the contents from Arweave to.
+    tmp_file_handle, tmp_file_path = tempfile.mkstemp()
+    with open(tmp_file_handle, "wb") as write_tar_gz:
+        write_tar_gz.write(arweave_response.content)
+
+    tmp_dir = tempfile.mkdtemp()
+    try:
+        arkly_gzip = tarfile.open(tmp_file_path)
+        arkly_gzip.extractall(tmp_dir)
+    except tarfile.ReadError:
+        response.status_code = status.HTTP_422_UNPROCESSABLE_ENTITY
+        return {
+            "transaction_url": transaction_url,
+            "file_url": arweave_url,
+            "valid": "UNKNOWN",
+        }
+
+    try:
+        bag_ulid = os.listdir(tmp_dir)[0]
+        bag_file = Path(tmp_dir) / bag_ulid
+    except IndexError:
+        response.status_code = status.HTTP_404_NOT_FOUND
+        return {
+            "transaction_url": transaction_url,
+            "file_url": arweave_url,
+            "valid": "UNKNOWN",
+        }
+
+    # Create bag object and validate, and return information from it.
+    try:
+        arkly_bag = bagit.Bag(str(bag_file))
+        return {
+            "transaction_url": transaction_url,
+            "file_url": arweave_url,
+            "valid": f"{arkly_bag.validate()}",
+            "bag_info": arkly_bag.info,
+            "bag_ulid": bag_ulid,
+        }
+    except bagit.BagError:
+        response.status_code = status.HTTP_422_UNPROCESSABLE_ENTITY
+        return {
+            "transaction_url": transaction_url,
+            "file_url": arweave_url,
+            "valid": "UNKNOWN",
+        }
