@@ -26,7 +26,8 @@ from arweave_utilities import winston_to_ar
 
 
 async def create_temp_wallet(file):
-    """A function that created a wallet object to be used in various API calls
+    """A function that created a wallet object to be used in various API
+    calls.
 
     :param file: JWK file, defaults to File(...)
     :type file: JSON
@@ -59,7 +60,8 @@ async def _check_balance(file):
 
 
 async def _check_last_transaction(file):
-    """Allows a user to check the transaction id of their last transaction
+    """Allows a user to check the transaction id of their last
+    transaction.
 
     :param file: JWK file, defaults to File(...)
     :type file: UploadFile, optional
@@ -142,7 +144,8 @@ async def bag_files(path: Path) -> None:
 
 
 async def _package_content(files):
-    """Package the files submitted to the create_transaction endpoint."""
+    """Package the files submitted to the create_transaction endpoint.
+    """
     # Create a folder for the user's wallet.
     tmp_dir = tempfile.mkdtemp()
     package_ulid = str(ulid.new())
