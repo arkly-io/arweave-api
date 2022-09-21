@@ -106,7 +106,6 @@ def test_fetch_upload():
     ):
         data = {"transaction_id": "cZiaojZtzyL1ZB7GjbWLbj62S_9pxPDHu61HQvSYgD0"}
         req = requests.get(url="http://127.0.0.1:8000/fetch_upload/", params=data)
-        print(req.content)
         # self.assertNotEqual(req.content, None)
         assert req.text is not None
 
