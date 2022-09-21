@@ -8,8 +8,6 @@ from typing import Final
 import requests
 import vcr
 
-# response = requests.get("http://127.0.0.1:8000/")
-
 # Location to record VCR cassettes to replay API requests/responses.
 VCR_FIXTURES_PATH: Final[Path] = Path("tests/fixtures/vcrpy/")
 
@@ -40,7 +38,6 @@ def test_check_balance():
         with open(str(WALLET_NAME), "rb") as my_file:
             files = {"file": (str(WALLET_NAME), my_file)}
             req = requests.post(url="http://127.0.0.1:8000/check_balance/", files=files)
-            # self.assertNotEqual(req.text, None)
             json_response = json.loads(req.text)
             assert isinstance(json_response["balance"], float)
 
@@ -89,12 +86,13 @@ def test_check_transaction_status():
         req = requests.get(
             url="http://127.0.0.1:8000/check_transaction_status/", params=data
         )
-        # self.assertNotEqual(req.text, None)
         json_response = json.loads(req.text)
         assert (
             json_response["transaction_status"]
             != "Parameter issue. Please enter a valid transaction id."
         )
+        for item in ("block_height", "block_indep_hash", "number_of_confirmations"):
+            assert item in json_response["transaction_status"]
 
 
 def test_fetch_upload():
@@ -105,8 +103,8 @@ def test_fetch_upload():
     ):
         data = {"transaction_id": "cZiaojZtzyL1ZB7GjbWLbj62S_9pxPDHu61HQvSYgD0"}
         req = requests.get(url="http://127.0.0.1:8000/fetch_upload/", params=data)
-        # self.assertNotEqual(req.content, None)
         assert req.text is not None
+        assert req.headers.get("content-type") == "application/x-tar"
 
 
 def test_create_transaction():
@@ -124,8 +122,14 @@ def test_create_transaction():
                 req = requests.post(
                     url="http://127.0.0.1:8000/create_transaction/", files=files
                 )
-                # self.assertNotEqual(req.text, None)
                 assert req.text is not None
+                for item in (
+                    "transaction_id",
+                    "transaction_link",
+                    "transaction_status",
+                    "wallet_balance",
+                ):
+                    assert item in req.text
 
 
 def test_create_transaction_form():
@@ -163,13 +167,3 @@ def test_create_transaction_form():
                         json=data,
                     )
                     assert req.text is not None
-
-
-# def unit_tests():
-#     assert create_transaction() != None
-#     assert fetch_upload() != None
-#     assert check_last_transaction() != None
-#     assert check_balance() != None
-
-# if __name__ == "__main__":
-#     unit_tests()
