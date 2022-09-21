@@ -86,8 +86,8 @@ def test_check_transaction_status():
         str(VCR_FIXTURES_PATH / Path("test_check_transaction_status.yaml"))
     ):
         data = {"transaction_id": "cZiaojZtzyL1ZB7GjbWLbj62S_9pxPDHu61HQvSYgD0"}
-        req = requests.post(
-            url="https://api.arkly.io/check_transaction_status/", params=data
+        req = requests.get(
+            url="http://127.0.0.1:8000/check_transaction_status/", params=data
         )
         # self.assertNotEqual(req.text, None)
         json_response = json.loads(req.text)
