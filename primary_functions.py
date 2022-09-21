@@ -8,7 +8,6 @@ formatted documentation.
 import json
 import sys
 import tempfile
-import urllib
 from pathlib import Path
 
 import arweave
@@ -122,11 +121,9 @@ async def _fetch_upload(transaction_id: str):
         tmp_dir = tempfile.mkdtemp()
         fetch_dir = tmp_dir / Path(f"{transaction_id}.tar.gz")
         print(f"Fetch writing to {fetch_dir}", file=sys.stderr)
-        with urllib.request.urlopen(url) as response, open(
-            str(fetch_dir), "wb"
-        ) as out_file:
-            file_header = response.read()
-            out_file.write(file_header)
-            return FileResponse(str(fetch_dir))
-    except urllib.request.HTTPError as err:
+        response = requests.get(url)
+        with open(str(fetch_dir), "wb") as content:
+            content.write(response.content)
+        return FileResponse(str(fetch_dir))
+    except requests.exceptions.ConnectionError as err:
         raise HTTPException from err
