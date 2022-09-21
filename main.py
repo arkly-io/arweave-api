@@ -9,7 +9,6 @@ import os.path
 import sys
 import tarfile
 import tempfile
-import urllib.request
 from io import BytesIO
 from pathlib import Path
 from typing import Final, List
@@ -19,18 +18,9 @@ import requests
 import ulid
 from arweave.arweave_lib import Transaction
 from arweave.transaction_uploader import get_uploader
-from fastapi import (
-    FastAPI,
-    File,
-    Form,
-    HTTPException,
-    Request,
-    Response,
-    UploadFile,
-    status,
-)
+from fastapi import FastAPI, File, Form, Request, Response, UploadFile, status
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse, RedirectResponse
+from fastapi.responses import RedirectResponse
 from pydantic import BaseModel
 
 from middleware import _update_db
@@ -39,6 +29,7 @@ from primary_functions import (
     _check_last_transaction,
     _check_transaction_status,
     _estimate_transaction_cost,
+    _fetch_upload,
     create_temp_wallet,
 )
 
@@ -125,40 +116,11 @@ async def estimate_transaction_cost(size_in_bytes: str):
 
 
 @app.get("/fetch_upload/")
-def fetch_upload(transaction_id: str):
-    """Allows a user to read their file upload from the Arweave blockchain
-    :param file: JWK file, defaults to File(...)
-    :type file: UploadFile, optional
-    :return: The compressed file upload
-    :rtype: File Object
+async def fetch_upload(transaction_id: str):
+    """Allows a user to read their file upload from the Arweave
+    blockchain.
     """
-    url = "http://arweave.net/" + transaction_id
-    try:
-
-        # Create a temporary directory for our fetch data. Mkdtemp does this in
-        # the most secure way possible.
-        tmp_dir = tempfile.mkdtemp()
-        fetch_dir = tmp_dir / Path(f"{transaction_id}.tar.gz")
-
-        print(f"Fetch writing to {fetch_dir}", file=sys.stderr)
-
-        with urllib.request.urlopen(url) as response, open(
-            str(fetch_dir), "wb"
-        ) as out_file:
-            file_header = response.read()
-            out_file.write(file_header)
-            return FileResponse(str(fetch_dir))
-
-    except urllib.request.HTTPError as err:
-        raise HTTPException from err
-        # raise HTTPException(
-        #     status_code=404,
-        #     detail=(
-        #         "Failed to get file. "
-        #         + err.reason
-        #         + " Insure transaction id is valid, and try again."
-        #     ),
-        # )
+    return await _fetch_upload(transaction_id)
 
 
 async def bag_files(path: Path) -> None:
