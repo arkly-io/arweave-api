@@ -1,6 +1,7 @@
 """
 This module is an Arweave FastAPI that allows users to communicate to Arweave, and put files on chain.
 """
+import base64
 import json
 import os
 import os.path
@@ -8,6 +9,7 @@ import sys
 import tarfile
 import tempfile
 import urllib.request
+from io import BytesIO
 from pathlib import Path
 from typing import Final, List
 
@@ -18,7 +20,16 @@ import requests
 import ulid
 from arweave.arweave_lib import Transaction
 from arweave.transaction_uploader import get_uploader
-from fastapi import FastAPI, File, HTTPException, Request, Response, UploadFile, status
+from fastapi import (
+    FastAPI,
+    File,
+    Form,
+    HTTPException,
+    Request,
+    Response,
+    UploadFile,
+    status,
+)
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, RedirectResponse
 
@@ -128,6 +139,19 @@ def redirect_root_to_docs():
     return RedirectResponse(url="/docs")
 
 
+async def _check_balance(file: UploadFile = File(...)):
+    """WIP: Do not merge.
+
+    Part of a test hack for Mendix.
+    """
+    jwk_file = file
+    wallet = await create_temp_wallet(jwk_file)
+    if wallet != "Error":
+        balance = wallet.balance
+        return {"balance": balance}
+    return {"balance": "Error on wallet load."}
+
+
 @app.post("/check_balance/", tags=[TAG_ARWEAVE])
 async def check_balance(file: UploadFile = File(...)):
     """Allows a user to check the balance of their wallet
@@ -136,12 +160,7 @@ async def check_balance(file: UploadFile = File(...)):
     :return: The balance of your wallet as a JSON object
     :rtype: JSON object
     """
-    jwk_file = file
-    wallet = await create_temp_wallet(jwk_file)
-    if wallet != "Error":
-        balance = wallet.balance
-        return {"balance": balance}
-    return {"balance": "Error on wallet load."}
+    return await _check_balance(file)
 
 
 @app.post("/check_last_transaction/", tags=[TAG_ARWEAVE])
@@ -288,17 +307,10 @@ async def package_content(files):
     return tar_file_name
 
 
-@app.post("/create_transaction/", tags=[TAG_ARWEAVE])
-async def create_transaction(files: List[UploadFile] = File(...)):
-    """Create an Arkly package and Arweave transaction.
+async def _create_transaction(files: List[UploadFile] = File(...)):
+    """WIP: Do not merge.
 
-    We do so as follows:
-        - Create a folder for the wallet user to place their uploads in
-          as well as any additional folders and metadata required.
-        - Create a bagit file from that folder.
-        - Compresses and packages uploaded files into .tar.gz files.
-        - Uploads the compressed tarball to Arweave for the current
-          Arweave price.
+    Part of a test hack for Mendix.
     """
     for file in files:
         wallet = await create_temp_wallet(file)
@@ -339,6 +351,21 @@ async def create_transaction(files: List[UploadFile] = File(...)):
             "wallet_balance": f"{wallet.balance}",
         }
     return {"transaction_id": "Error creating transaction."}
+
+
+@app.post("/create_transaction/", tags=[TAG_ARWEAVE])
+async def create_transaction(files: List[UploadFile] = File(...)):
+    """Create an Arkly package and Arweave transaction.
+
+    We do so as follows:
+        - Create a folder for the wallet user to place their uploads in
+          as well as any additional folders and metadata required.
+        - Create a bagit file from that folder.
+        - Compresses and packages uploaded files into .tar.gz files.
+        - Uploads the compressed tarball to Arweave for the current
+          Arweave price.
+    """
+    return await _create_transaction(files)
 
 
 def _get_arweave_urls_from_tx(transaction_id):
@@ -404,3 +431,38 @@ async def validate_bag(transaction_id: str, response: Response):
             "file_url": arweave_url,
             "valid": "UNKNOWN",
         }
+
+
+# Hack for Mendix.
+
+
+def file_from_data(file_data):
+    """Do not merge.
+
+    Part of Mendix hack.
+    """
+
+    data = base64.b64decode(file_data)
+    return BytesIO(data)
+
+
+@app.post("/check_balance_form/", tags=[TAG_ARWEAVE])
+async def check_balance_form(wallet: str = Form()):
+    """Allows a user to check the balance of their wallet."""
+    bytes_wallet = file_from_data(wallet)
+    uploaded_wallet = UploadFile(filename="", file=bytes_wallet, content_type="")
+    return await _check_balance(uploaded_wallet)
+
+
+@app.post("/create_transaction_form/", tags=[TAG_ARWEAVE])
+async def create_transaction_form(wallet: str = Form(), packet: str = Form()):
+    """Create an Arkly package and Arweave transaction."""
+    bytes_wallet = file_from_data(wallet)
+    bytes_packet = file_from_data(packet)
+    data_files = [
+        UploadFile(filename="wallet.json", file=bytes_wallet, content_type="text/json"),
+        UploadFile(
+            filename="arkly-data.txt", file=bytes_packet, content_type="text/plain"
+        ),
+    ]
+    return await _create_transaction(data_files)
