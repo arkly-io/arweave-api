@@ -1,0 +1,36 @@
+interactions:
+- request:
+    body: 'substitute: my_wallet.json -- form-data'
+    headers:
+      Accept:
+      - '*/*'
+      Accept-Encoding:
+      - gzip, deflate
+      Connection:
+      - keep-alive
+      Content-Length:
+      - '207537'
+      Content-Type:
+      - application/x-www-form-urlencoded
+      User-Agent:
+      - python-requests/2.28.1
+    method: POST
+    uri: https://api.arkly.io/create_transaction_form/
+  response:
+    body:
+      string: '{"transaction_id":"TBkAGId-9EmaImQJXhoSvwcqOINPiYpJ0YCaCan1Jt4","transaction_link":"https://viewblock.io/arweave/tx/TBkAGId-9EmaImQJXhoSvwcqOINPiYpJ0YCaCan1Jt4","transaction_status":"PENDING","wallet_balance":"9.717013477825"}'
+    headers:
+      Connection:
+      - keep-alive
+      Content-Length:
+      - '226'
+      Content-Type:
+      - application/json
+      Date:
+      - Wed, 05 Oct 2022 22:35:56 GMT
+      Server:
+      - nginx/1.18.0 (Ubuntu)
+    status:
+      code: 200
+      message: OK
+version: 1

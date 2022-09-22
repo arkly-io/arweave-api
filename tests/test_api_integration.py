@@ -3,6 +3,7 @@ To lint use:
 tox -e linting
 """
 
+import base64
 import json
 from pathlib import Path
 from typing import Final
@@ -134,6 +135,43 @@ def test_create_transaction():
                 )
                 # self.assertNotEqual(req.text, None)
                 assert req.text is not None
+
+
+def test_create_transaction_form():
+    """Testing out the create_transaction endpoint"""
+    arweave_vcr = vcr.VCR(before_record_request=_scrub_wallet_data())
+    with arweave_vcr.use_cassette(
+        str(VCR_FIXTURES_PATH / Path("test_create_transaction_form.yaml"))
+    ):
+        with open(str(WALLET_NAME), "rb") as my_wallet:
+            with open("files/text-sample-1.pdf", "rb") as sample_file:
+                with open("files/text-sample-2.pdf", "rb") as sample_file_2:
+                    arweave_files = []
+                    encoded_file_1 = base64.b64encode(sample_file.read())
+                    encoded_wallet = base64.b64encode(my_wallet.read())
+                    arweave_files.append(
+                        {
+                            "FileName": "text-sample-1.pdf",
+                            "Content": encoded_file_1.decode("utf-8"),
+                        }
+                    )
+
+                    encoded_file_2 = base64.b64encode(sample_file_2.read())
+                    arweave_files.append(
+                        {
+                            "FileName": "text-sample-2.pdf",
+                            "Content": encoded_file_2.decode("utf-8"),
+                        }
+                    )
+                    data = {
+                        "ArweaveKey": encoded_wallet.decode("utf-8"),
+                        "ArweaveFiles": arweave_files,
+                    }
+                    req = requests.post(
+                        url="https://api.arkly.io/create_transaction_form/",
+                        json=data,
+                    )
+                    assert req.text is not None
 
 
 # def unit_tests():
