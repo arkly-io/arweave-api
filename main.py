@@ -1,5 +1,5 @@
-"""
-This module is an Arweave FastAPI that allows users to communicate to Arweave, and put files on chain.
+"""This module is an Arweave FastAPI that allows users to communicate
+to Arweave, and put files on chain.
 """
 import base64
 import json
