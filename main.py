@@ -34,10 +34,10 @@ tags_metadata = [
     {
         "name": TAG_ARWEAVE,
         "description": "Manage Arweave transactions",
-        "externalDocs": {
-            "description": "Arkly-Arweave documentation",
-            "url": "https://docs.arkly.io",
-        },
+    },
+    {
+        "name": TAG_ARKLY,
+        "description": "Arkly functions on-top of Arweave",
     },
 ]
 
@@ -107,7 +107,7 @@ async def estimate_transaction_cost(size_in_bytes: str):
     return await _estimate_transaction_cost(size_in_bytes)
 
 
-@app.get("/fetch_upload/")
+@app.get("/fetch_upload/", tags=[TAG_ARWEAVE])
 async def fetch_upload(transaction_id: str):
     """Allows a user to read their file upload from the Arweave
     blockchain.
@@ -115,7 +115,7 @@ async def fetch_upload(transaction_id: str):
     return await _fetch_upload(transaction_id)
 
 
-@app.post("/create_transaction/", tags=[TAG_ARWEAVE])
+@app.post("/create_transaction/", tags=[TAG_ARKLY])
 async def create_transaction(files: List[UploadFile] = File(...)):
     """Create an Arkly package and Arweave transaction."""
     return await _create_transaction(files)
