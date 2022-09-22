@@ -9,27 +9,25 @@ interactions:
       Connection:
       - keep-alive
       Content-Length:
-      - '207537'
+      - '4438'
       Content-Type:
-      - application/x-www-form-urlencoded
+      - application/json
       User-Agent:
       - python-requests/2.28.1
     method: POST
-    uri: https://api.arkly.io/create_transaction_form/
+    uri: http://127.0.0.1:8000/create_transaction_form/
   response:
     body:
-      string: '{"transaction_id":"TBkAGId-9EmaImQJXhoSvwcqOINPiYpJ0YCaCan1Jt4","transaction_link":"https://viewblock.io/arweave/tx/TBkAGId-9EmaImQJXhoSvwcqOINPiYpJ0YCaCan1Jt4","transaction_status":"PENDING","wallet_balance":"9.717013477825"}'
+      string: '{"transaction_id":"pHzEYnNreqBp5MCLKMK90yLUXxAMVX5RN13XSFItCaQ","transaction_link":"https://viewblock.io/arweave/tx/pHzEYnNreqBp5MCLKMK90yLUXxAMVX5RN13XSFItCaQ","transaction_status":"PENDING","wallet_balance":"0.018214910585"}'
     headers:
-      Connection:
-      - keep-alive
-      Content-Length:
+      content-length:
       - '226'
-      Content-Type:
+      content-type:
       - application/json
-      Date:
-      - Wed, 05 Oct 2022 22:35:56 GMT
-      Server:
-      - nginx/1.18.0 (Ubuntu)
+      date:
+      - Mon, 31 Oct 2022 18:50:51 GMT
+      server:
+      - uvicorn
     status:
       code: 200
       message: OK

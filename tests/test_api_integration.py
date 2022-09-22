@@ -2,9 +2,10 @@
 
 import base64
 import json
-from pathlib import Path
+from pathlib import Path, PosixPath
 from typing import Final
 
+import pytest
 import requests
 import vcr
 
@@ -111,14 +112,26 @@ def test_fetch_upload():
         assert req.headers.get("content-type") == "application/x-tar"
 
 
-def test_create_transaction():
+@pytest.fixture(name="arkly_test_file")
+def create_arkly_test_file(tmp_path: PosixPath) -> PosixPath:
+    """Generate a file of arbitrary complexity to store on Arweave as
+    part of these integration tests.
+    """
+    test_data_filename: Final[str] = "arweave-data.txt"
+    test_file = tmp_path / test_data_filename
+    with open(test_file, "w", encoding="UTF-8") as tmp_test_file:
+        tmp_test_file.write("Arkly test data")
+    return test_file
+
+
+def test_create_transaction(arkly_test_file: PosixPath):
     """Testing out the create_transaction endpoint"""
     arweave_vcr = vcr.VCR(before_record_request=_scrub_wallet_data())
     with arweave_vcr.use_cassette(
         str(VCR_FIXTURES_PATH / Path("test_create_transaction.yaml"))
     ):
         with open(str(WALLET_NAME), "rb") as my_wallet:
-            with open("files/text-sample-1.pdf", "rb") as sample_file:
+            with open(str(arkly_test_file), "rb") as sample_file:
                 files = [
                     ("files", my_wallet),
                     ("files", sample_file),
@@ -136,41 +149,50 @@ def test_create_transaction():
                     assert item in req.text
 
 
-def test_create_transaction_form():
+def test_create_transaction_form(arkly_test_file: PosixPath):
     """Testing out the create_transaction endpoint"""
     arweave_vcr = vcr.VCR(before_record_request=_scrub_wallet_data())
     with arweave_vcr.use_cassette(
         str(VCR_FIXTURES_PATH / Path("test_create_transaction_form.yaml"))
     ):
         with open(str(WALLET_NAME), "rb") as my_wallet:
-            with open("files/text-sample-1.pdf", "rb") as sample_file:
-                with open("files/text-sample-2.pdf", "rb") as sample_file_2:
-                    arweave_files = []
-                    encoded_file_1 = base64.b64encode(sample_file.read())
-                    encoded_wallet = base64.b64encode(my_wallet.read())
-                    arweave_files.append(
-                        {
-                            "FileName": "text-sample-1.pdf",
-                            "Content": encoded_file_1.decode("utf-8"),
-                        }
-                    )
+            with open(str(arkly_test_file), "rb") as sample_file:
 
-                    encoded_file_2 = base64.b64encode(sample_file_2.read())
-                    arweave_files.append(
-                        {
-                            "FileName": "text-sample-2.pdf",
-                            "Content": encoded_file_2.decode("utf-8"),
-                        }
-                    )
-                    data = {
-                        "ArweaveKey": encoded_wallet.decode("utf-8"),
-                        "ArweaveFiles": arweave_files,
+                arweave_files = []
+                encoded_file_1 = base64.b64encode(sample_file.read())
+                encoded_wallet = base64.b64encode(my_wallet.read())
+                arweave_files.append(
+                    {
+                        "FileName": "test_file_one.txt",
+                        "Base64File": encoded_file_1.decode("utf-8"),
                     }
-                    req = requests.post(
-                        url="https://api.arkly.io/create_transaction_form/",
-                        json=data,
-                    )
-                    assert req.text is not None
+                )
+
+                # Reset file_stream to zero to read again.
+                sample_file.seek(0)
+                encoded_file_2 = base64.b64encode(sample_file.read())
+                arweave_files.append(
+                    {
+                        "FileName": "test_file_two.txt",
+                        "Base64File": encoded_file_2.decode("utf-8"),
+                    }
+                )
+                data = {
+                    "ArweaveKey": encoded_wallet.decode("utf-8"),
+                    "ArweaveFiles": arweave_files,
+                }
+                req = requests.post(
+                    url=f"{TESTING_BASE_URL}/create_transaction_form/",
+                    json=data,
+                )
+                assert req.text is not None
+                for item in (
+                    "transaction_id",
+                    "transaction_link",
+                    "transaction_status",
+                    "wallet_balance",
+                ):
+                    assert item in req.text
 
 
 def test_validate_bag_valid_bag():
