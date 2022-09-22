@@ -23,7 +23,7 @@ from fastapi import File, HTTPException, Response, UploadFile, status
 from fastapi.responses import FileResponse
 
 
-async def create_temp_wallet(file):
+async def create_temp_wallet(file: UploadFile) -> arweave.Wallet:
     """A function that created a wallet object to be used in various API
     calls.
 
@@ -41,7 +41,7 @@ async def create_temp_wallet(file):
     return wallet
 
 
-async def _check_balance(file):
+async def _check_balance(file: UploadFile) -> dict:
     """Allows a user to check the balance of their wallet.
 
     :param file: JWK file, defaults to File(...)
@@ -57,7 +57,7 @@ async def _check_balance(file):
     return {"balance": "Error on wallet load."}
 
 
-async def _check_last_transaction(file):
+async def _check_last_transaction(file: UploadFile) -> dict:
     """Allows a user to check the transaction id of their last
     transaction.
 
@@ -75,7 +75,7 @@ async def _check_last_transaction(file):
     return {"last_transaction_id": "Failure to get response..."}
 
 
-async def _check_transaction_status(transaction_id: int):
+async def _check_transaction_status(transaction_id: int) -> dict:
     """Allows a user to check the transaction id of their last
     transaction.
 
@@ -94,7 +94,7 @@ async def _check_transaction_status(transaction_id: int):
     }
 
 
-async def _estimate_transaction_cost(size_in_bytes: str):
+async def _estimate_transaction_cost(size_in_bytes: str) -> dict:
     """Allows a user to get an estimate of how much a transaction may
     cost.
 
@@ -123,7 +123,7 @@ async def _estimate_transaction_cost(size_in_bytes: str):
     }
 
 
-async def _fetch_upload(transaction_id: str):
+async def _fetch_upload(transaction_id: str) -> FileResponse:
     """Allows a user to read their file upload from the Arweave
     blockchain.
 
@@ -152,7 +152,7 @@ async def bag_files(path: Path) -> None:
     bagit.make_bag(path, {"Random Data": "arkly.io"})
 
 
-async def _package_content(files):
+async def _package_content(files: List[UploadFile] = File(...)) -> dict:
     """Package the files submitted to the create_transaction endpoint."""
     # Create a folder for the user's wallet.
     tmp_dir = tempfile.mkdtemp()
@@ -191,7 +191,7 @@ async def _package_content(files):
     return tar_file_name
 
 
-async def _create_transaction(files: List[UploadFile] = File(...)):
+async def _create_transaction(files: List[UploadFile] = File(...)) -> dict:
     """Create an Arkly package and Arweave transaction.
 
     We do so as follows:
@@ -243,7 +243,7 @@ async def _create_transaction(files: List[UploadFile] = File(...)):
     return {"transaction_id": "Error creating transaction."}
 
 
-def _get_arweave_urls_from_tx(transaction_id):
+def _get_arweave_urls_from_tx(transaction_id: str) -> dict:
     """Return a transaction URL and Arweave URL from a given Arweave
     transaction ID.
     """
@@ -253,7 +253,7 @@ def _get_arweave_urls_from_tx(transaction_id):
     )
 
 
-async def _validate_bag(transaction_id: str, response: Response):
+async def _validate_bag(transaction_id: str, response: Response) -> dict:
     """Given an Arweave transaction ID, Validate an Arkly link as a bag."""
 
     # Setup retrieval of the data from the given transaction.
