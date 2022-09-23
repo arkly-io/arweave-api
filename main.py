@@ -48,10 +48,6 @@ tags_metadata = [
     {
         "name": TAG_ARWEAVE,
         "description": "Manage Arweave transactions",
-        "externalDocs": {
-            "description": "Arkly-Arweave documentation",
-            "url": "https://docs.arkly.io",
-        },
     },
 ]
 
@@ -78,7 +74,7 @@ app = FastAPI(
     description=API_DESCRIPTION,
     version="2022.08.17.0001",
     contact={
-        "url": "https://arkly.io",
+        "": "",
     },
     openapi_tags=tags_metadata,
 )
