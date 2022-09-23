@@ -25,7 +25,7 @@ from fastapi.responses import FileResponse, RedirectResponse
 # Arkly-arweave API description.
 API_DESCRIPTION: Final[
     str
-] = "Connecting Arweave with digital preservation best-practice"
+] = " "
 
 # OpenAPI tags delineating the documentation.
 TAG_ARWEAVE: Final[str] = "arweave"
