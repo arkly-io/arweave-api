@@ -34,9 +34,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, RedirectResponse
 
 # Arkly-arweave API description.
-API_DESCRIPTION: Final[
-    str
-] = " "
+API_DESCRIPTION: Final[str] = " "
 
 # OpenAPI tags delineating the documentation.
 TAG_ARWEAVE: Final[str] = "arweave"
@@ -389,38 +387,37 @@ async def validate_bag(transaction_id: str, response: Response):
 
     tmp_dir = tempfile.mkdtemp()
     try:
-        arkly_gzip = tarfile.open(tmp_file_path)
-        arkly_gzip.extractall(tmp_dir)
+        with tarfile.open(tmp_file_path) as arkly_gzip:
+            arkly_gzip.extractall(tmp_dir)
+            try:
+                bag_ulid = os.listdir(tmp_dir)[0]
+                bag_file = Path(tmp_dir) / bag_ulid
+            except IndexError:
+                response.status_code = status.HTTP_404_NOT_FOUND
+                return {
+                    "transaction_url": transaction_url,
+                    "file_url": arweave_url,
+                    "valid": "UNKNOWN",
+                }
+
+            # Create bag object and validate, and return information from it.
+            try:
+                arkly_bag = bagit.Bag(str(bag_file))
+                return {
+                    "transaction_url": transaction_url,
+                    "file_url": arweave_url,
+                    "valid": f"{arkly_bag.validate()}",
+                    "bag_info": arkly_bag.info,
+                    "bag_ulid": bag_ulid,
+                }
+            except bagit.BagError:
+                response.status_code = status.HTTP_422_UNPROCESSABLE_ENTITY
+                return {
+                    "transaction_url": transaction_url,
+                    "file_url": arweave_url,
+                    "valid": "UNKNOWN",
+                }
     except tarfile.ReadError:
-        response.status_code = status.HTTP_422_UNPROCESSABLE_ENTITY
-        return {
-            "transaction_url": transaction_url,
-            "file_url": arweave_url,
-            "valid": "UNKNOWN",
-        }
-
-    try:
-        bag_ulid = os.listdir(tmp_dir)[0]
-        bag_file = Path(tmp_dir) / bag_ulid
-    except IndexError:
-        response.status_code = status.HTTP_404_NOT_FOUND
-        return {
-            "transaction_url": transaction_url,
-            "file_url": arweave_url,
-            "valid": "UNKNOWN",
-        }
-
-    # Create bag object and validate, and return information from it.
-    try:
-        arkly_bag = bagit.Bag(str(bag_file))
-        return {
-            "transaction_url": transaction_url,
-            "file_url": arweave_url,
-            "valid": f"{arkly_bag.validate()}",
-            "bag_info": arkly_bag.info,
-            "bag_ulid": bag_ulid,
-        }
-    except bagit.BagError:
         response.status_code = status.HTTP_422_UNPROCESSABLE_ENTITY
         return {
             "transaction_url": transaction_url,
@@ -450,15 +447,35 @@ async def check_balance_form(wallet: str = Form()):
     return await _check_balance(uploaded_wallet)
 
 
+# class Data(BaseModel):
+#     wallet: UploadFile
+#     base64: List[str]
+
+# wallet: str = Form(), data: List[str] = Form(...)
 @app.post("/create_transaction_form/", tags=[TAG_ARWEAVE])
-async def create_transaction_form(wallet: str = Form(), packet: str = Form()):
+async def create_transaction_form(
+    base_64_list: List[str] = Form(...), filename_list: List[str] = Form(...)
+):
     """Create an Arkly package and Arweave transaction."""
-    bytes_wallet = file_from_data(wallet)
-    bytes_packet = file_from_data(packet)
+    bytes_wallet = file_from_data(base_64_list[0])
+    base_64_list.pop(0)
     data_files = [
         UploadFile(filename="wallet.json", file=bytes_wallet, content_type="text/json"),
-        UploadFile(
-            filename="arkly-data.txt", file=bytes_packet, content_type="text/plain"
-        ),
+        # UploadFile(
+        #     filename="arkly-data.txt", file=bytes_packet, content_type="text/plain"
+        # ),
     ]
+    file_count = 0
+    if len(base_64_list) != len(filename_list):
+        return {
+            "create_transaction_form": "Error. Ensure that files have matching filenames in filename_list param."
+        }
+
+    for i, base_64_string in enumerate(base_64_list):
+        bytes_packet = file_from_data(base_64_string)
+        upload_obj = UploadFile(
+            filename=f"{filename_list[i]}", file=bytes_packet, content_type="text/plain"
+        )
+        data_files.append(upload_obj)
+        file_count = file_count + 1
     return await _create_transaction(data_files)

@@ -3,6 +3,7 @@ To lint use:
 tox -e linting
 """
 
+import base64
 import json
 from pathlib import Path
 from typing import Final
@@ -134,6 +135,32 @@ def test_create_transaction():
                 )
                 # self.assertNotEqual(req.text, None)
                 assert req.text is not None
+
+
+def test_create_transaction_form():
+    """Testing out the create_transaction endpoint"""
+    arweave_vcr = vcr.VCR(before_record_request=_scrub_wallet_data())
+    with arweave_vcr.use_cassette(
+        str(VCR_FIXTURES_PATH / Path("test_create_transaction_form.yaml"))
+    ):
+        with open(str(WALLET_NAME), "rb") as my_wallet:
+            with open("files/text-sample-1.pdf", "rb") as sample_file:
+                with open("files/text-sample-2.pdf", "rb") as sample_file_2:
+                    base64_list = []
+                    name_list = []
+                    encoded_string = base64.b64encode(sample_file.read())
+                    encoded_wallet = base64.b64encode(my_wallet.read())
+                    base64_list.append(encoded_wallet)
+                    base64_list.append(encoded_string)
+                    encoded_string = base64.b64encode(sample_file_2.read())
+                    base64_list.append(encoded_string)
+                    name_list.append("text-sample-1.pdf")
+                    name_list.append("text-sample-2.pdf")
+                    data = {"base_64_list": base64_list, "filename_list": name_list}
+                    req = requests.post(
+                        url="http://127.0.0.1:8000/create_transaction_form/", data=data
+                    )
+                    assert req.text is not None
 
 
 # def unit_tests():
