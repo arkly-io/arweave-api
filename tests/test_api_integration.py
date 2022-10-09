@@ -149,6 +149,7 @@ def test_create_transaction_form():
                     arweave_files = []
                     encoded_file_1 = base64.b64encode(sample_file.read())
                     encoded_wallet = base64.b64encode(my_wallet.read())
+                    print(f"Encoded type: {type(encoded_wallet)}")
                     arweave_files.append(
                         {
                             "FileName": "text-sample-1.pdf",
@@ -167,10 +168,10 @@ def test_create_transaction_form():
                         "ArweaveKey": encoded_wallet.decode("utf-8"),
                         "ArweaveFiles": arweave_files,
                     }
-                    my_json_string = json.dumps(json_string)
-                    data = my_json_string
+                    data = json_string
                     req = requests.post(
-                        url="https://api.arkly.io/create_transaction_form/", json=data
+                        url="https://api.arkly.io/create_transaction_form/",
+                        json=data,
                     )
                     assert req.text is not None
 

@@ -11,7 +11,7 @@ import tempfile
 import urllib.request
 from io import BytesIO
 from pathlib import Path
-from typing import Final, List
+from typing import Dict, Final, List
 
 import arweave
 import bagit
@@ -32,6 +32,7 @@ from fastapi import (
 )
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, RedirectResponse
+from pydantic import BaseModel
 
 # Arkly-arweave API description.
 API_DESCRIPTION: Final[str] = " "
@@ -447,23 +448,23 @@ async def check_balance_form(wallet: str = Form()):
     return await _check_balance(uploaded_wallet)
 
 
-# class Data(BaseModel):
-#     wallet: UploadFile
-#     base64: List[str]
+class TransactionJson(BaseModel):
+    """Pedantic Basemodel class used to accept json input to make transactions"""
+
+    ArweaveKey: str
+    ArweaveFiles: List[Dict]
+
 
 # wallet: str = Form(), data: List[str] = Form(...)
 @app.post("/create_transaction_form/", tags=[TAG_ARWEAVE])
-async def create_transaction_form(base64_json: Request):
+async def create_transaction_form(transaction_json: TransactionJson):
     """Create an Arkly package and Arweave transaction."""
-    transaction_json = await base64_json.json()
-    transaction_json = json.loads(transaction_json)
-    arweave_file_dict_list = transaction_json["ArweaveFiles"]
-
-    bytes_wallet = file_from_data(transaction_json["ArweaveKey"])
+    arweave_file_dict_list = transaction_json.ArweaveFiles
+    bytes_wallet = file_from_data(transaction_json.ArweaveKey)
+    print(type(bytes_wallet))
     data_files = [
         UploadFile(filename="wallet.json", file=bytes_wallet, content_type="text/json"),
     ]
-
     # json_dict format is -> {"FileName": "string","Content": "base64encoded"}
     for json_dict in arweave_file_dict_list:
         bytes_packet = file_from_data(json_dict["Content"])

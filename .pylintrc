@@ -12,6 +12,7 @@
 #
 
 [MAIN]
+extension-pkg-whitelist=pydantic
 
 ignore=
 	LICENSE,
