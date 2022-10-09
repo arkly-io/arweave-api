@@ -146,19 +146,31 @@ def test_create_transaction_form():
         with open(str(WALLET_NAME), "rb") as my_wallet:
             with open("files/text-sample-1.pdf", "rb") as sample_file:
                 with open("files/text-sample-2.pdf", "rb") as sample_file_2:
-                    base64_list = []
-                    name_list = []
-                    encoded_string = base64.b64encode(sample_file.read())
+                    arweave_files = []
+                    encoded_file_1 = base64.b64encode(sample_file.read())
                     encoded_wallet = base64.b64encode(my_wallet.read())
-                    base64_list.append(encoded_wallet)
-                    base64_list.append(encoded_string)
-                    encoded_string = base64.b64encode(sample_file_2.read())
-                    base64_list.append(encoded_string)
-                    name_list.append("text-sample-1.pdf")
-                    name_list.append("text-sample-2.pdf")
-                    data = {"base_64_list": base64_list, "filename_list": name_list}
+                    arweave_files.append(
+                        {
+                            "FileName": "text-sample-1.pdf",
+                            "Content": encoded_file_1.decode("utf-8"),
+                        }
+                    )
+
+                    encoded_file_2 = base64.b64encode(sample_file_2.read())
+                    arweave_files.append(
+                        {
+                            "FileName": "text-sample-2.pdf",
+                            "Content": encoded_file_2.decode("utf-8"),
+                        }
+                    )
+                    json_string = {
+                        "ArweaveKey": encoded_wallet.decode("utf-8"),
+                        "ArweaveFiles": arweave_files,
+                    }
+                    my_json_string = json.dumps(json_string)
+                    data = my_json_string
                     req = requests.post(
-                        url="http://127.0.0.1:8000/create_transaction_form/", data=data
+                        url="https://api.arkly.io/create_transaction_form/", json=data
                     )
                     assert req.text is not None
 

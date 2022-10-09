@@ -453,29 +453,22 @@ async def check_balance_form(wallet: str = Form()):
 
 # wallet: str = Form(), data: List[str] = Form(...)
 @app.post("/create_transaction_form/", tags=[TAG_ARWEAVE])
-async def create_transaction_form(
-    base_64_list: List[str] = Form(...), filename_list: List[str] = Form(...)
-):
+async def create_transaction_form(base64_json: Request):
     """Create an Arkly package and Arweave transaction."""
-    bytes_wallet = file_from_data(base_64_list[0])
-    base_64_list.pop(0)
+    transaction_json = await base64_json.json()
+    transaction_json = json.loads(transaction_json)
+    arweave_file_dict_list = transaction_json["ArweaveFiles"]
+
+    bytes_wallet = file_from_data(transaction_json["ArweaveKey"])
     data_files = [
         UploadFile(filename="wallet.json", file=bytes_wallet, content_type="text/json"),
-        # UploadFile(
-        #     filename="arkly-data.txt", file=bytes_packet, content_type="text/plain"
-        # ),
     ]
-    file_count = 0
-    if len(base_64_list) != len(filename_list):
-        return {
-            "create_transaction_form": "Error. Ensure that files have matching filenames in filename_list param."
-        }
 
-    for i, base_64_string in enumerate(base_64_list):
-        bytes_packet = file_from_data(base_64_string)
+    # json_dict format is -> {"FileName": "string","Content": "base64encoded"}
+    for json_dict in arweave_file_dict_list:
+        bytes_packet = file_from_data(json_dict["Content"])
         upload_obj = UploadFile(
-            filename=f"{filename_list[i]}", file=bytes_packet, content_type="text/plain"
+            filename=json_dict["FileName"], file=bytes_packet, content_type="text/plain"
         )
         data_files.append(upload_obj)
-        file_count = file_count + 1
     return await _create_transaction(data_files)
