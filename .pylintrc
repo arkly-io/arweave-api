@@ -12,7 +12,8 @@
 #
 
 [MAIN]
-extension-pkg-whitelist=pydantic
+extension-pkg-whitelist=
+    pydantic, # binary module validation, Pydantic/Pylint recommendation.
 
 ignore=
 	LICENSE,
