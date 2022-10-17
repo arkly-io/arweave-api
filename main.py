@@ -453,7 +453,21 @@ class TransactionJson(BaseModel):
 
     ArweaveKey: str
     ArweaveFiles: List[Dict]
+class FileItem(BaseModel):
+    """Structure to hold information about a file to be uploaded to
+    Arweave.
+    """
+    FileName: str
+    Base64File: str
+    ContentType: str | None = "application/octet-stream"
 
+
+class ArweaveTransaction(BaseModel):
+    """Pedantic BaseModel class used to accept json input to make
+    transactions.
+    """
+    ArweaveKey: str
+    ArweaveFiles: List[FileItem]
 
 # wallet: str = Form(), data: List[str] = Form(...)
 @app.post("/create_transaction_form/", tags=[TAG_ARWEAVE])
