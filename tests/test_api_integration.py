@@ -149,7 +149,6 @@ def test_create_transaction_form():
                     arweave_files = []
                     encoded_file_1 = base64.b64encode(sample_file.read())
                     encoded_wallet = base64.b64encode(my_wallet.read())
-                    print(f"Encoded type: {type(encoded_wallet)}")
                     arweave_files.append(
                         {
                             "FileName": "text-sample-1.pdf",
@@ -164,11 +163,10 @@ def test_create_transaction_form():
                             "Content": encoded_file_2.decode("utf-8"),
                         }
                     )
-                    json_string = {
+                    data = {
                         "ArweaveKey": encoded_wallet.decode("utf-8"),
                         "ArweaveFiles": arweave_files,
                     }
-                    data = json_string
                     req = requests.post(
                         url="https://api.arkly.io/create_transaction_form/",
                         json=data,

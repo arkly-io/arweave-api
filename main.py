@@ -11,7 +11,7 @@ import tempfile
 import urllib.request
 from io import BytesIO
 from pathlib import Path
-from typing import Dict, Final, List
+from typing import Final, List
 
 import arweave
 import bagit
@@ -448,15 +448,11 @@ async def check_balance_form(wallet: str = Form()):
     return await _check_balance(uploaded_wallet)
 
 
-class TransactionJson(BaseModel):
-    """Pedantic Basemodel class used to accept json input to make transactions"""
-
-    ArweaveKey: str
-    ArweaveFiles: List[Dict]
 class FileItem(BaseModel):
     """Structure to hold information about a file to be uploaded to
     Arweave.
     """
+
     FileName: str
     Base64File: str
     ContentType: str | None = "application/octet-stream"
@@ -466,24 +462,27 @@ class ArweaveTransaction(BaseModel):
     """Pedantic BaseModel class used to accept json input to make
     transactions.
     """
+
     ArweaveKey: str
     ArweaveFiles: List[FileItem]
 
+
 # wallet: str = Form(), data: List[str] = Form(...)
 @app.post("/create_transaction_form/", tags=[TAG_ARWEAVE])
-async def create_transaction_form(transaction_json: TransactionJson):
+async def create_transaction_form(transaction_json: ArweaveTransaction):
     """Create an Arkly package and Arweave transaction."""
-    arweave_file_dict_list = transaction_json.ArweaveFiles
+    arweave_file_item_list = transaction_json.ArweaveFiles
     bytes_wallet = file_from_data(transaction_json.ArweaveKey)
-    print(type(bytes_wallet))
     data_files = [
         UploadFile(filename="wallet.json", file=bytes_wallet, content_type="text/json"),
     ]
-    # json_dict format is -> {"FileName": "string","Content": "base64encoded"}
-    for json_dict in arweave_file_dict_list:
-        bytes_packet = file_from_data(json_dict["Content"])
+    # Iterate through FileItem objects
+    for file_item in arweave_file_item_list:
+        print(file_item)
+        print(type(file_item))
+        bytes_packet = file_from_data(file_item.Base64File)
         upload_obj = UploadFile(
-            filename=json_dict["FileName"], file=bytes_packet, content_type="text/plain"
+            filename=file_item.FileName, file=bytes_packet, content_type="text/plain"
         )
         data_files.append(upload_obj)
     return await _create_transaction(data_files)
