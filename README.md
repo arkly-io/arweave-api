@@ -36,16 +36,23 @@ can deactivate the virtual environment as follows:
 
 ```bash
 deactivate
-````
+```
 
 ## Usage :computer:
 
-To start the server locally, run `uvicorn main:app --reload`
+To start the server locally, run:
+ ```bash
+ uvicorn main:app --reload
+ ```
 
 ## Testing :gear:
 
-In the root folder, start the server locally and then use `tox -e py310` to
-execute the unit tests.
+In the root folder, start the server locally and then use:
+```bash
+tox -e py310` 
+```
+
+to execute the unit tests.
 
 ## Endpoint documentation :scroll:
 
@@ -58,3 +65,35 @@ Documentation for the API endpoints comes in two variants:
 ### Redoc: Alternative API docs
 
 * http://127.0.0.1:8000/redoc/
+
+# Database (PostgreSQL) :elephant:
+
+To access the Postgres prompt:
+```postgresql
+psql
+```
+
+To connect to our database:
+```postgresql
+\c arkly
+```
+
+To show tables:
+```postgresql
+\dt
+```
+
+To display info on our endpoint info table:
+```postgresql
+\d endpoint_calls
+```
+
+To display values held by each column:
+```sql
+SELECT * FROM endpoint_calls;
+```
+
+To quit the Postgres prompt:
+```postgresql
+\q
+```
