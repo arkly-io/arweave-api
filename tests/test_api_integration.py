@@ -47,6 +47,24 @@ def test_check_balance():
             assert isinstance(json_response["balance"], float)
 
 
+def test_check_balance_form():
+    """Testing the check_balance endpoint"""
+    arweave_vcr = vcr.VCR(before_record_request=_scrub_wallet_data())
+    with arweave_vcr.use_cassette(
+        str(VCR_FIXTURES_PATH / Path("test_check_balance_form.yaml"))
+    ):
+        with open(str(WALLET_NAME), "rb") as my_wallet:
+            encoded_wallet = base64.b64encode(my_wallet.read())
+            data = {
+                "wallet": encoded_wallet.decode("utf-8"),
+            }
+            req = requests.post(
+                url=f"{TESTING_BASE_URL}/check_balance_form/", data=data
+            )
+            json_response = json.loads(req.text)
+            assert isinstance(json_response["balance"], float)
+
+
 def test_check_last_transaction():
     """Testing the check_last_transaction endpoint"""
     arweave_vcr = vcr.VCR(before_record_request=_scrub_wallet_data())

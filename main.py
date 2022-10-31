@@ -3,21 +3,21 @@
 This module is an Arweave FastAPI server that allows users to
 communicate with Arweave, and put Arkly files on chain.
 """
-import base64
-from io import BytesIO
 from typing import Final, List
 
 from fastapi import FastAPI, File, Form, Request, Response, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import RedirectResponse
-from pydantic import BaseModel
 
 from middleware import _update_db
+from models import ArweaveTransaction
 from primary_functions import (
     _check_balance,
+    _check_balance_form,
     _check_last_transaction,
     _check_transaction_status,
     _create_transaction,
+    _create_transaction_form,
     _estimate_transaction_cost,
     _fetch_upload,
     _validate_bag,
@@ -85,6 +85,12 @@ async def check_balance(file: UploadFile = File(...)):
     return await _check_balance(file)
 
 
+@app.post("/check_balance_form/", tags=[TAG_ARWEAVE])
+async def check_balance_form(wallet: str = Form()):
+    """Allows a user to check the balance of their wallet."""
+    return await _check_balance_form(wallet)
+
+
 @app.post("/check_last_transaction/", tags=[TAG_ARWEAVE])
 async def check_last_transaction(file: UploadFile = File(...)):
     """Allows a user to check the transaction id of their last
@@ -123,61 +129,14 @@ async def create_transaction(files: List[UploadFile] = File(...)):
     return await _create_transaction(files)
 
 
+@app.post("/create_transaction_form/", tags=[TAG_ARKLY])
+async def create_transaction_form(transaction_json: ArweaveTransaction):
+    """Create an Arkly package and Arweave transaction."""
+    data_files = await _create_transaction_form(transaction_json)
+    return await _create_transaction(data_files)
+
+
 @app.get("/validate_arweave_bag/", tags=[TAG_ARKLY])
 async def validate_bag(transaction_id: str, response: Response):
     """Given an Arweave transaction ID, Validate an Arkly link as a bag."""
     return await _validate_bag(transaction_id, response)
-
-
-def file_from_data(file_data):
-    """Return a file-like BytesIO stream from Base64 encoded data."""
-    data = base64.b64decode(file_data)
-    return BytesIO(data)
-
-
-@app.post("/check_balance_form/", tags=[TAG_ARWEAVE])
-async def check_balance_form(wallet: str = Form()):
-    """Allows a user to check the balance of their wallet."""
-    bytes_wallet = file_from_data(wallet)
-    uploaded_wallet = UploadFile(filename="", file=bytes_wallet, content_type="")
-    return await _check_balance(uploaded_wallet)
-
-
-class FileItem(BaseModel):
-    """Structure to hold information about a file to be uploaded to
-    Arweave.
-    """
-
-    FileName: str
-    Base64File: str
-    ContentType: str | None = "application/octet-stream"
-
-
-class ArweaveTransaction(BaseModel):
-    """Pedantic BaseModel class used to accept json input to make
-    transactions.
-    """
-
-    ArweaveKey: str
-    ArweaveFiles: List[FileItem]
-
-
-# wallet: str = Form(), data: List[str] = Form(...)
-@app.post("/create_transaction_form/", tags=[TAG_ARWEAVE])
-async def create_transaction_form(transaction_json: ArweaveTransaction):
-    """Create an Arkly package and Arweave transaction."""
-    arweave_file_item_list = transaction_json.ArweaveFiles
-    bytes_wallet = file_from_data(transaction_json.ArweaveKey)
-    data_files = [
-        UploadFile(filename="wallet.json", file=bytes_wallet, content_type="text/json"),
-    ]
-    # Iterate through FileItem objects
-    for file_item in arweave_file_item_list:
-        print(file_item)
-        print(type(file_item))
-        bytes_packet = file_from_data(file_item.Base64File)
-        upload_obj = UploadFile(
-            filename=file_item.FileName, file=bytes_packet, content_type="text/plain"
-        )
-        data_files.append(upload_obj)
-    return await _create_transaction(data_files)

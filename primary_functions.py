@@ -4,12 +4,13 @@ These function calls are wrapped by the Arweave FastAPI endpoint calls.
 The FastAPI calls are used as entry points only to provide a place for
 formatted documentation.
 """
-
+import base64
 import json
 import os
 import sys
 import tarfile
 import tempfile
+from io import BytesIO
 from pathlib import Path
 from typing import Final, List
 
@@ -19,10 +20,17 @@ import requests
 import ulid
 from arweave.arweave_lib import Transaction
 from arweave.transaction_uploader import get_uploader
-from fastapi import File, HTTPException, Response, UploadFile, status
+from fastapi import File, Form, HTTPException, Response, UploadFile, status
 from fastapi.responses import FileResponse
 
 from arweave_utilities import winston_to_ar
+from models import ArweaveTransaction
+
+
+def _file_from_data(file_data):
+    """Return a file-like BytesIO stream from Base64 encoded data."""
+    data = base64.b64decode(file_data)
+    return BytesIO(data)
 
 
 async def create_temp_wallet(file: UploadFile) -> arweave.Wallet:
@@ -57,6 +65,16 @@ async def _check_balance(file: UploadFile) -> dict:
         balance = wallet.balance
         return {"balance": balance}
     return {"balance": "Error on wallet load."}
+
+
+async def _check_balance_form(wallet: str = Form()):
+    """Allows a user to check the balance of their wallet using a
+    application/x-www-form-urlencoded with wallet data encoded as a
+    Base64 string.
+    """
+    bytes_wallet = _file_from_data(wallet)
+    uploaded_wallet = UploadFile(filename="", file=bytes_wallet, content_type="")
+    return await _check_balance(uploaded_wallet)
 
 
 async def _check_last_transaction(file: UploadFile) -> dict:
@@ -232,6 +250,28 @@ async def _create_transaction(files: List[UploadFile] = File(...)) -> dict:
             "wallet_balance": f"{wallet.balance}",
         }
     return {"transaction_id": "Error creating transaction."}
+
+
+async def _create_transaction_form(transaction_json: ArweaveTransaction):
+    """Create an Arkly package and Arweave transaction using an
+    application/x-www-form-urlencoded form, with data encoded as
+    Base64 strings.
+    """
+    arweave_file_item_list = transaction_json.ArweaveFiles
+    bytes_wallet = _file_from_data(transaction_json.ArweaveKey)
+    data_files = [
+        UploadFile(filename="wallet.json", file=bytes_wallet, content_type="text/json"),
+    ]
+    # Iterate through FileItem objects.
+    for file_item in arweave_file_item_list:
+        print(file_item)
+        print(type(file_item))
+        bytes_packet = _file_from_data(file_item.Base64File)
+        upload_obj = UploadFile(
+            filename=file_item.FileName, file=bytes_packet, content_type="text/plain"
+        )
+        data_files.append(upload_obj)
+    return data_files
 
 
 def _get_arweave_urls_from_tx(transaction_id: str) -> dict:

@@ -1,0 +1,34 @@
+interactions:
+- request:
+    body: 'substitute: my_wallet.json -- form-data'
+    headers:
+      Accept:
+      - '*/*'
+      Accept-Encoding:
+      - gzip, deflate
+      Connection:
+      - keep-alive
+      Content-Length:
+      - '4267'
+      Content-Type:
+      - application/x-www-form-urlencoded
+      User-Agent:
+      - python-requests/2.28.1
+    method: POST
+    uri: http://127.0.0.1:8000/check_balance_form/
+  response:
+    body:
+      string: '{"balance":0.018111740951}'
+    headers:
+      content-length:
+      - '26'
+      content-type:
+      - application/json
+      date:
+      - Mon, 31 Oct 2022 19:43:15 GMT
+      server:
+      - uvicorn
+    status:
+      code: 200
+      message: OK
+version: 1
