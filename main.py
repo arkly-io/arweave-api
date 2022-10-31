@@ -33,12 +33,12 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, RedirectResponse
 from pydantic import BaseModel
 
-from arweave_utilities import winston_to_ar
 from middleware import _update_db
 from primary_functions import (
     _check_balance,
     _check_last_transaction,
     _check_transaction_status,
+    _estimate_transaction_cost,
     create_temp_wallet,
 )
 
@@ -116,24 +116,12 @@ async def check_transaction_status(transaction_id: str):
     return await _check_transaction_status(transaction_id)
 
 
-@app.post("/estimate_transaction_cost/", tags=[TAG_ARWEAVE])
+@app.get("/estimate_transaction_cost/", tags=[TAG_ARWEAVE])
 async def estimate_transaction_cost(size_in_bytes: str):
     """Allows a user to get an estimate of how much a transaction may
     cost.
-
-    :param size_in_bytes: A string which is an integer that represents
-        the number of bytes to be uploaded
-    :type size_in_bytes: str
-    :return: The estimated cost of the transaction
-    :rtype: JSON object
     """
-    if size_in_bytes.isdigit():
-        cost_estimate = requests.get(f"https://arweave.net/price/{size_in_bytes}/")
-        winston_str = winston_to_ar(cost_estimate)
-        return {"estimate_transaction_cost": winston_str}
-    return {
-        "estimate_transaction_cost": "Parameter issue. Please enter a valid amount of bytes as an integer."
-    }
+    return _estimate_transaction_cost(size_in_bytes)
 
 
 @app.get("/fetch_upload/")

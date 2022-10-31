@@ -68,8 +68,8 @@ def test_estimate_transaction_cost():
         str(VCR_FIXTURES_PATH / Path("test_estimate_transaction_cost.yaml"))
     ):
         data = {"size_in_bytes": "10000000000"}
-        req = requests.post(
-            url="https://api.arkly.io/estimate_transaction_cost/", params=data
+        req = requests.get(
+            url="http://127.0.0.1:8000/estimate_transaction_cost/", params=data
         )
         # self.assertNotEqual(req.text, None)
         json_response = json.loads(req.text)
