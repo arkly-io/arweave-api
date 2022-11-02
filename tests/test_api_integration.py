@@ -20,6 +20,34 @@ WALLET_NAME: Final[Path] = Path("myWallet.json")
 TESTING_BASE_URL: Final[str] = "http://127.0.0.1:8000"
 
 
+@pytest.fixture(name="mock_wallet")
+def create_wallet(tmp_path: PosixPath) -> PosixPath:
+    """Create a mock wallet for running this code remotely, i.e. on a
+    continuous integration server where interaction with Arweave or
+    vcrpy is neither wanted or desired.
+    A wallet is still required for re-recording unit tests locally and
+    so if it exists, the wallet itself is passed as a fixture to the
+    tests.
+    """
+    wallet = Path(WALLET_NAME)
+    if wallet.exists():
+        return wallet
+    file_name = tmp_path / "myWallet.json"
+    file_name.write_text("sample-wallet-data")
+    return file_name
+
+
+@pytest.fixture(name="arkly_test_file")
+def create_arkly_test_file(tmp_path: PosixPath) -> PosixPath:
+    """Generate mock test data for running this code remotely and for
+    storage in our test packages.
+    """
+    test_data_filename: Final[str] = "test-data.txt"
+    test_file = tmp_path / test_data_filename
+    test_file.write_text("Arkly test data")
+    return test_file
+
+
 def _scrub_wallet_data(replace=True):
     """Ensure that wallet data is removed from vcrpy requests."""
 
@@ -34,26 +62,26 @@ def _scrub_wallet_data(replace=True):
     return before_record_request
 
 
-def test_check_balance():
+def test_check_balance(mock_wallet: PosixPath):
     """Testing the check_balance endpoint"""
     arweave_vcr = vcr.VCR(before_record_request=_scrub_wallet_data())
     with arweave_vcr.use_cassette(
         str(VCR_FIXTURES_PATH / Path("test_check_balance.yaml"))
     ):
-        with open(str(WALLET_NAME), "rb") as my_file:
+        with open(str(mock_wallet), "rb") as my_file:
             files = {"file": (str(WALLET_NAME), my_file)}
             req = requests.post(url=f"{TESTING_BASE_URL}/check_balance/", files=files)
             json_response = json.loads(req.text)
             assert isinstance(json_response["balance"], float)
 
 
-def test_check_balance_form():
+def test_check_balance_form(mock_wallet: PosixPath):
     """Testing the check_balance endpoint"""
     arweave_vcr = vcr.VCR(before_record_request=_scrub_wallet_data())
     with arweave_vcr.use_cassette(
         str(VCR_FIXTURES_PATH / Path("test_check_balance_form.yaml"))
     ):
-        with open(str(WALLET_NAME), "rb") as my_wallet:
+        with open(str(mock_wallet), "rb") as my_wallet:
             encoded_wallet = base64.b64encode(my_wallet.read())
             data = {
                 "wallet": encoded_wallet.decode("utf-8"),
@@ -65,13 +93,13 @@ def test_check_balance_form():
             assert isinstance(json_response["balance"], float)
 
 
-def test_check_last_transaction():
+def test_check_last_transaction(mock_wallet: PosixPath):
     """Testing the check_last_transaction endpoint"""
     arweave_vcr = vcr.VCR(before_record_request=_scrub_wallet_data())
     with arweave_vcr.use_cassette(
         str(VCR_FIXTURES_PATH / Path("test_check_last_transaction.yaml"))
     ):
-        with open(str(WALLET_NAME), "rb") as my_file:
+        with open(str(mock_wallet), "rb") as my_file:
             files = {"file": (str(WALLET_NAME), my_file)}
             req = requests.post(
                 url=f"{TESTING_BASE_URL}/check_last_transaction/", files=files
@@ -130,25 +158,13 @@ def test_fetch_upload():
         assert req.headers.get("content-type") == "application/x-tar"
 
 
-@pytest.fixture(name="arkly_test_file")
-def create_arkly_test_file(tmp_path: PosixPath) -> PosixPath:
-    """Generate a file of arbitrary complexity to store on Arweave as
-    part of these integration tests.
-    """
-    test_data_filename: Final[str] = "arweave-data.txt"
-    test_file = tmp_path / test_data_filename
-    with open(test_file, "w", encoding="UTF-8") as tmp_test_file:
-        tmp_test_file.write("Arkly test data")
-    return test_file
-
-
-def test_create_transaction(arkly_test_file: PosixPath):
+def test_create_transaction(arkly_test_file: PosixPath, mock_wallet: PosixPath):
     """Testing out the create_transaction endpoint"""
     arweave_vcr = vcr.VCR(before_record_request=_scrub_wallet_data())
     with arweave_vcr.use_cassette(
         str(VCR_FIXTURES_PATH / Path("test_create_transaction.yaml"))
     ):
-        with open(str(WALLET_NAME), "rb") as my_wallet:
+        with open(str(mock_wallet), "rb") as my_wallet:
             with open(str(arkly_test_file), "rb") as sample_file:
                 files = [
                     ("files", my_wallet),
@@ -167,13 +183,13 @@ def test_create_transaction(arkly_test_file: PosixPath):
                     assert item in req.text
 
 
-def test_create_transaction_form(arkly_test_file: PosixPath):
+def test_create_transaction_form(arkly_test_file: PosixPath, mock_wallet: PosixPath):
     """Testing out the create_transaction endpoint"""
     arweave_vcr = vcr.VCR(before_record_request=_scrub_wallet_data())
     with arweave_vcr.use_cassette(
         str(VCR_FIXTURES_PATH / Path("test_create_transaction_form.yaml"))
     ):
-        with open(str(WALLET_NAME), "rb") as my_wallet:
+        with open(str(mock_wallet), "rb") as my_wallet:
             with open(str(arkly_test_file), "rb") as sample_file:
 
                 arweave_files = []
