@@ -1,4 +1,4 @@
-# Pylint configuration for Arkly projects.
+# Pylint configuration for Arkly and Orcfax related projects.
 #
 # .pylintrc guide: https://github.com/PyCQA/pylint/blob/cfc393a8dff9ec09bd2fcb25857e772ae04a4991/examples/pylintrc
 #
@@ -28,9 +28,11 @@ ignore-patterns=
 	^(.+).service$,
 
 ignore-paths=
-	requirements/*,
-	.github/,
-	tests/fixtures/vcrpy/*,
+    .git/.,
+    requirements/.,
+    .github/,
+    tests/fixtures/vcrpy/.,
+    .vscode/.,
 
 [MESSAGES CONTROL]
 

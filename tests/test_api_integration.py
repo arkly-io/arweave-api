@@ -191,7 +191,6 @@ def test_create_transaction_form(arkly_test_file: PosixPath, mock_wallet: PosixP
     ):
         with open(str(mock_wallet), "rb") as my_wallet:
             with open(str(arkly_test_file), "rb") as sample_file:
-
                 arweave_files = []
                 encoded_file_1 = base64.b64encode(sample_file.read())
                 encoded_wallet = base64.b64encode(my_wallet.read())

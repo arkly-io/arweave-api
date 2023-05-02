@@ -217,7 +217,6 @@ async def _create_transaction(files: List[UploadFile] = File(...)) -> dict:
             files.remove(file)
             break
     if wallet != "Error":
-
         # Create a package from files array. Package content will create
         # this in a secure temporary directory.
         tar_file_name = await _package_content(files)
