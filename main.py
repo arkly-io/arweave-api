@@ -3,31 +3,46 @@
 This module is an Arweave FastAPI server that allows users to
 communicate with Arweave, and put Arkly files on chain.
 """
+import logging
+import time
 from typing import Final, List
 
-from fastapi import FastAPI, File, Form, Request, Response, UploadFile
+from fastapi import FastAPI, File, Request, Response, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import RedirectResponse
 
 from middleware import _update_db
-from models import ArweaveTransaction
+from models import Tags
 from primary_functions import (
+    _all_transactions,
     _check_balance,
-    _check_balance_form,
     _check_last_transaction,
     _check_transaction_status,
     _create_transaction,
-    _create_transaction_form,
     _estimate_transaction_cost,
+    _fetch_tx_metadata,
     _fetch_upload,
+    _retrieve_by_tag_pair,
     _validate_bag,
 )
+
+logging.basicConfig(
+    format="%(asctime)-15s %(levelname)s :: %(filename)s:%(lineno)s:%(funcName)s() :: %(message)s",
+    datefmt="%Y-%m-%d %H:%M:%S",
+    level="INFO",
+)
+
+logging.Formatter.converter = time.gmtime
+
+logger = logging.getLogger(__name__)
 
 # Arkly-arweave API description.
 API_DESCRIPTION: Final[str] = " "
 
 # OpenAPI tags delineating the documentation.
 TAG_ARWEAVE: Final[str] = "arweave"
+TAG_ARWEAVE_WALLET: Final[str] = "arweave wallet"
+TAG_ARWEAVE_SEARCH: Final[str] = "arweave search"
 TAG_ARKLY: Final[str] = "arkly"
 
 # Metadata for each of the tags in the OpenAPI specification. To order
@@ -38,6 +53,14 @@ tags_metadata = [
         "description": "Manage Arweave transactions",
     },
     {
+        "name": TAG_ARWEAVE_WALLET,
+        "description": "Manage Arweave wallets",
+    },
+    {
+        "name": TAG_ARWEAVE_SEARCH,
+        "description": "Search for Arweave transactions",
+    },
+    {
         "name": TAG_ARKLY,
         "description": "Arkly functions on-top of Arweave",
     },
@@ -46,7 +69,7 @@ tags_metadata = [
 app = FastAPI(
     title="api.arkly.io",
     description=API_DESCRIPTION,
-    version="2022.11.02.0001",
+    version="2023.08.09.0001",
     contact={
         "": "",
     },
@@ -79,24 +102,26 @@ def redirect_root_to_docs():
     return RedirectResponse(url="/docs")
 
 
-@app.post("/check_balance/", tags=[TAG_ARWEAVE])
-async def check_balance(file: UploadFile = File(...)):
+@app.post("/check_wallet_balance/", tags=[TAG_ARWEAVE_WALLET])
+async def check_wallet_balance(wallet: UploadFile):
     """Allows a user to check the balance of their wallet."""
-    return await _check_balance(file)
+    return await _check_balance(wallet)
 
 
-@app.post("/check_balance_form/", tags=[TAG_ARWEAVE])
-async def check_balance_form(wallet: str = Form()):
-    """Allows a user to check the balance of their wallet."""
-    return await _check_balance_form(wallet)
-
-
-@app.post("/check_last_transaction/", tags=[TAG_ARWEAVE])
-async def check_last_transaction(file: UploadFile = File(...)):
+@app.post("/check_wallet_last_transaction/", tags=[TAG_ARWEAVE_WALLET])
+async def check_wallet_last_transaction(wallet: UploadFile):
     """Allows a user to check the transaction id of their last
     transaction.
     """
-    return await _check_last_transaction(file)
+    return await _check_last_transaction(wallet)
+
+
+@app.get("/estimate_transaction_cost/", tags=[TAG_ARWEAVE])
+async def estimate_transaction_cost(size_in_bytes: str):
+    """Allows a user to get an estimate of how much a transaction may
+    cost.
+    """
+    return await _estimate_transaction_cost(size_in_bytes)
 
 
 @app.get("/check_transaction_status/", tags=[TAG_ARWEAVE])
@@ -107,36 +132,56 @@ async def check_transaction_status(transaction_id: str):
     return await _check_transaction_status(transaction_id)
 
 
-@app.get("/estimate_transaction_cost/", tags=[TAG_ARWEAVE])
-async def estimate_transaction_cost(size_in_bytes: str):
-    """Allows a user to get an estimate of how much a transaction may
-    cost.
-    """
-    return _estimate_transaction_cost(size_in_bytes)
-
-
-@app.get("/fetch_upload/", tags=[TAG_ARWEAVE])
-async def fetch_upload(transaction_id: str):
-    """Allows a user to read their file upload from the Arweave
+@app.get("/fetch_transaction/", tags=[TAG_ARWEAVE])
+async def fetch_transaction(transaction_id: str):
+    """Allows a user to read their transaction files from the Arweave
     blockchain.
     """
     return await _fetch_upload(transaction_id)
 
 
+@app.get("/fetch_transaction_metadata/", tags=[TAG_ARWEAVE])
+async def fetch_transaction_metadata(transaction_id: str):
+    """Fetch metadata from a given transaction ID to provide further
+    information about the uploaded package.
+
+    Example transaction ID: `g-NHeONtgGJJCSEfMLPKD_amc2aZJTQzQkSGVvoOInY`
+    """
+    return await _fetch_tx_metadata(transaction_id)
+
+
+@app.get("/all_wallet_transactions/", tags=[TAG_ARWEAVE_SEARCH])
+async def get_all_wallet_transactions(wallet_addr: str):
+    """Allows a user to see a list of all transactions with a given
+    wallet.
+
+    Example wallet: `6KymaAPWd3JNyMT0B7EPYij4TWxehhMrzRD8qifCSLs`
+    """
+    return await _all_transactions(wallet_addr)
+
+
+@app.get("/transactions_by_tag_pair/", tags=[TAG_ARWEAVE_SEARCH])
+async def get_transactions_by_tag_pair(name: str, value: str):
+    """Allows a user to retrieve transactions by tag-pair.
+
+    Example tag key: `tag_name_1`
+    Example tag value: `tag_value_1`
+    """
+    return await _retrieve_by_tag_pair(name, value)
+
+
 @app.post("/create_transaction/", tags=[TAG_ARKLY])
-async def create_transaction(files: List[UploadFile] = File(...)):
+async def create_transaction(
+    wallet: UploadFile,
+    package_file_name: str,
+    files: List[UploadFile] = File(...),
+    tags: Tags | None = None,
+):
     """Create an Arkly package and Arweave transaction."""
-    return await _create_transaction(files)
+    return await _create_transaction(wallet, files, package_file_name, tags)
 
 
-@app.post("/create_transaction_form/", tags=[TAG_ARKLY])
-async def create_transaction_form(transaction_json: ArweaveTransaction):
-    """Create an Arkly package and Arweave transaction."""
-    data_files = await _create_transaction_form(transaction_json)
-    return await _create_transaction(data_files)
-
-
-@app.get("/validate_arweave_bag/", tags=[TAG_ARKLY])
+@app.get("/validate_arkly_bag/", tags=[TAG_ARKLY])
 async def validate_bag(transaction_id: str, response: Response):
     """Given an Arweave transaction ID, Validate an Arkly link as a bag."""
     return await _validate_bag(transaction_id, response)
