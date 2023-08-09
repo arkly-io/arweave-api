@@ -230,7 +230,9 @@ async def _fetch_tx_metadata(transaction_id: str) -> dict:
     try:
         data = json.loads(resp.text)
     except json.JSONDecodeError as err:
-        data["error"] = f"problem retrieving metadata please try again shortly: {err}"
+        data[
+            "error"
+        ] = f"problem retrieving metadata please check Tx ID or try again shortly: '{err}'"
         return data
     # Humanize data size output for Arkly's end-users.
     data["data_size_bytes"] = data["data_size"]
