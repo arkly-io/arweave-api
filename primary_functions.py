@@ -226,8 +226,12 @@ async def _fetch_tx_metadata(transaction_id: str) -> dict:
     """
     request_url = f"{ARWEAVE_API_BASEURL}/tx/{transaction_id}"
     resp = requests.get(request_url, timeout=30)
-    data = json.loads(resp.text)
-
+    data = {}
+    try:
+        data = json.loads(resp.text)
+    except json.JSONDecodeError as err:
+        data["error"] = f"problem retrieving metadata please try again shortly: {err}"
+        return data
     # Humanize data size output for Arkly's end-users.
     data["data_size_bytes"] = data["data_size"]
     data["data_size_natural_size"] = humanize.naturalsize(data["data_size"])
