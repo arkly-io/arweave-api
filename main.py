@@ -110,7 +110,7 @@ async def check_wallet_balance(wallet: UploadFile):
 
 @app.post("/check_wallet_last_transaction/", tags=[TAG_ARWEAVE_WALLET])
 async def check_wallet_last_transaction(wallet: UploadFile):
-    """Allows a user to check the transaction id of their last
+    """Allows a user to check the transaction ID of their last
     transaction.
     """
     return await _check_last_transaction(wallet)
@@ -128,6 +128,8 @@ async def estimate_transaction_cost(size_in_bytes: str):
 async def check_transaction_status(transaction_id: str):
     """Allows a user to check the transaction id of their last
     transaction.
+
+    Example Tx: `rYa3ILXqWi_V52xPoG70y2EupPsTtu4MsMmz6DI4fy4`
     """
     return await _check_transaction_status(transaction_id)
 
@@ -136,6 +138,8 @@ async def check_transaction_status(transaction_id: str):
 async def fetch_transaction(transaction_id: str):
     """Allows a user to read their transaction files from the Arweave
     blockchain.
+
+    Example Tx: `rYa3ILXqWi_V52xPoG70y2EupPsTtu4MsMmz6DI4fy4`
     """
     return await _fetch_upload(transaction_id)
 
@@ -145,7 +149,7 @@ async def fetch_transaction_metadata(transaction_id: str):
     """Fetch metadata from a given transaction ID to provide further
     information about the uploaded package.
 
-    Example transaction ID: `g-NHeONtgGJJCSEfMLPKD_amc2aZJTQzQkSGVvoOInY`
+    Example Tx: `rYa3ILXqWi_V52xPoG70y2EupPsTtu4MsMmz6DI4fy4`
     """
     return await _fetch_tx_metadata(transaction_id)
 
@@ -164,8 +168,8 @@ async def get_all_wallet_transactions(wallet_addr: str):
 async def get_transactions_by_tag_pair(name: str, value: str):
     """Allows a user to retrieve transactions by tag-pair.
 
-    Example tag key: `tag_name_1`
-    Example tag value: `tag_value_1`
+    Example tag key: `x-tag`
+    Example tag value: `arkly hello world!`
     """
     return await _retrieve_by_tag_pair(name, value)
 
@@ -183,5 +187,8 @@ async def create_transaction(
 
 @app.get("/validate_arkly_bag/", tags=[TAG_ARKLY])
 async def validate_bag(transaction_id: str, response: Response):
-    """Given an Arweave transaction ID, Validate an Arkly link as a bag."""
+    """Given an Arweave transaction ID, Validate an Arkly link as a bag.
+
+    Example Tx: `rYa3ILXqWi_V52xPoG70y2EupPsTtu4MsMmz6DI4fy4`
+    """
     return await _validate_bag(transaction_id, response)
