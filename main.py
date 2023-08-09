@@ -69,7 +69,7 @@ tags_metadata = [
 app = FastAPI(
     title="api.arkly.io",
     description=API_DESCRIPTION,
-    version="2023.08.09.0001",
+    version="2023.08.09.0002",
     contact={
         "": "",
     },
