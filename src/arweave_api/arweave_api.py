@@ -28,7 +28,7 @@ def main():
     """Primary entry point for this script."""
 
     parser = argparse.ArgumentParser(
-        prog="arweave_api",
+        prog="arweave-api",
         description="Arkly Arweave API",
         epilog="for more information visit https://arkly.io",
     )
