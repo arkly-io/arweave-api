@@ -3,8 +3,6 @@
 This module is an Arweave FastAPI server that allows users to
 communicate with Arweave, and put Arkly files on chain.
 """
-import logging
-import time
 from typing import Final, List
 
 from fastapi import FastAPI, File, Request, Response, UploadFile
@@ -29,32 +27,40 @@ try:
     )
     from version import get_version
 except ModuleNotFoundError:
-    from src.arweave_api.middleware import _update_db
-    from src.arweave_api.models import Tags
-    from src.arweave_api.primary_functions import (
-        _all_transactions,
-        _check_balance,
-        _check_last_transaction,
-        _check_transaction_status,
-        _create_transaction,
-        _estimate_transaction_cost,
-        _fetch_tx_metadata,
-        _fetch_upload,
-        _get_version_info,
-        _retrieve_by_tag_pair,
-        _validate_bag,
-    )
-    from src.arweave_api.version import get_version
-
-logging.basicConfig(
-    format="%(asctime)-15s %(levelname)s :: %(filename)s:%(lineno)s:%(funcName)s() :: %(message)s",
-    datefmt="%Y-%m-%d %H:%M:%S",
-    level="INFO",
-)
-
-logging.Formatter.converter = time.gmtime
-
-logger = logging.getLogger(__name__)
+    try:
+        from src.arweave_api.middleware import _update_db
+        from src.arweave_api.models import Tags
+        from src.arweave_api.primary_functions import (
+            _all_transactions,
+            _check_balance,
+            _check_last_transaction,
+            _check_transaction_status,
+            _create_transaction,
+            _estimate_transaction_cost,
+            _fetch_tx_metadata,
+            _fetch_upload,
+            _get_version_info,
+            _retrieve_by_tag_pair,
+            _validate_bag,
+        )
+        from src.arweave_api.version import get_version
+    except ModuleNotFoundError:
+        from arweave_api.middleware import _update_db
+        from arweave_api.models import Tags
+        from arweave_api.primary_functions import (
+            _all_transactions,
+            _check_balance,
+            _check_last_transaction,
+            _check_transaction_status,
+            _create_transaction,
+            _estimate_transaction_cost,
+            _fetch_tx_metadata,
+            _fetch_upload,
+            _get_version_info,
+            _retrieve_by_tag_pair,
+            _validate_bag,
+        )
+        from arweave_api.version import get_version
 
 # Arkly-arweave API description.
 API_DESCRIPTION: Final[str] = " "

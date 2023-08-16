@@ -39,9 +39,14 @@ try:
     from models import Tags
     from version import get_version
 except ModuleNotFoundError:
-    from src.arweave_api.arweave_utilities import winston_to_ar
-    from src.arweave_api.models import Tags
-    from src.arweave_api.version import get_version
+    try:
+        from src.arweave_api.arweave_utilities import winston_to_ar
+        from src.arweave_api.models import Tags
+        from src.arweave_api.version import get_version
+    except ModuleNotFoundError:
+        from arweave_api.arweave_utilities import winston_to_ar
+        from arweave_api.models import Tags
+        from arweave_api.version import get_version
 
 logger = logging.getLogger(__name__)
 
