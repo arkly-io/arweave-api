@@ -53,7 +53,7 @@ logger = logging.getLogger(__name__)
 ARWEAVE_API_BASEURL: Final[str] = "https://arweave.net"
 ARWEAVE_VIEW_BASEURL: Final[str] = "https://arweave.app"
 
-ARKLY_AGENT = "arkly.io"
+ARKLY_AGENT = f"api.arkly.io/{get_version()}"
 
 # NB. Legacy code, we need to replace with different error handling.
 # Beginning by incrementally working through the issues.
@@ -502,4 +502,4 @@ async def _retrieve_by_tag_pair(name: str, value: str) -> dict:
 
 async def _get_version_info() -> dict:
     """Return information about the versions used by this API."""
-    return {"api": get_version(), "bagit": bagit.VERSION}
+    return {"api": get_version(), "agent": ARKLY_AGENT, "bagit": bagit.VERSION}
