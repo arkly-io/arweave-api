@@ -2,7 +2,7 @@
 
 import pytest
 
-from arweave_utilities import winston_to_ar
+from src.arweave_api.arweave_utilities import winston_to_ar
 
 
 @pytest.mark.parametrize(

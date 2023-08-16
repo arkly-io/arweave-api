@@ -34,8 +34,14 @@ from arweave.transaction_uploader import get_uploader
 from fastapi import File, HTTPException, Response, UploadFile, status
 from fastapi.responses import FileResponse
 
-from arweave_utilities import winston_to_ar
-from models import Tags
+try:
+    from arweave_utilities import winston_to_ar
+    from models import Tags
+    from version import get_version
+except ModuleNotFoundError:
+    from src.arweave_api.arweave_utilities import winston_to_ar
+    from src.arweave_api.models import Tags
+    from src.arweave_api.version import get_version
 
 logger = logging.getLogger(__name__)
 
@@ -487,3 +493,8 @@ async def _retrieve_by_tag_pair(name: str, value: str) -> dict:
         "tag_pair": {"name": f"{name}", "value": f"{value}"},
         "arweave_transactions": tx_uris,
     }
+
+
+async def _get_version_info() -> dict:
+    """Return information about the versions used by this API."""
+    return {"api": get_version(), "bagit": bagit.VERSION}

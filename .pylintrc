@@ -26,6 +26,7 @@ ignore-patterns=
 	^(.+).md$,
 	^(.+).sh$,
 	^(.+).service$,
+    ^(.+).env,
 
 ignore-paths=
     .git/.,

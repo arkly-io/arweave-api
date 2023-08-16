@@ -11,20 +11,40 @@ from fastapi import FastAPI, File, Request, Response, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import RedirectResponse
 
-from middleware import _update_db
-from models import Tags
-from primary_functions import (
-    _all_transactions,
-    _check_balance,
-    _check_last_transaction,
-    _check_transaction_status,
-    _create_transaction,
-    _estimate_transaction_cost,
-    _fetch_tx_metadata,
-    _fetch_upload,
-    _retrieve_by_tag_pair,
-    _validate_bag,
-)
+try:
+    from middleware import _update_db
+    from models import Tags
+    from primary_functions import (
+        _all_transactions,
+        _check_balance,
+        _check_last_transaction,
+        _check_transaction_status,
+        _create_transaction,
+        _estimate_transaction_cost,
+        _fetch_tx_metadata,
+        _fetch_upload,
+        _get_version_info,
+        _retrieve_by_tag_pair,
+        _validate_bag,
+    )
+    from version import get_version
+except ModuleNotFoundError:
+    from src.arweave_api.middleware import _update_db
+    from src.arweave_api.models import Tags
+    from src.arweave_api.primary_functions import (
+        _all_transactions,
+        _check_balance,
+        _check_last_transaction,
+        _check_transaction_status,
+        _create_transaction,
+        _estimate_transaction_cost,
+        _fetch_tx_metadata,
+        _fetch_upload,
+        _get_version_info,
+        _retrieve_by_tag_pair,
+        _validate_bag,
+    )
+    from src.arweave_api.version import get_version
 
 logging.basicConfig(
     format="%(asctime)-15s %(levelname)s :: %(filename)s:%(lineno)s:%(funcName)s() :: %(message)s",
@@ -44,6 +64,7 @@ TAG_ARWEAVE: Final[str] = "arweave"
 TAG_ARWEAVE_WALLET: Final[str] = "arweave wallet"
 TAG_ARWEAVE_SEARCH: Final[str] = "arweave search"
 TAG_ARKLY: Final[str] = "arkly"
+TAG_MAINTAIN: Final[str] = "maintenance"
 
 # Metadata for each of the tags in the OpenAPI specification. To order
 # their display on the page, order the tags in this block.
@@ -69,7 +90,7 @@ tags_metadata = [
 app = FastAPI(
     title="api.arkly.io",
     description=API_DESCRIPTION,
-    version="2023.08.09.0003",
+    version=get_version(),
     contact={
         "": "",
     },
@@ -192,3 +213,9 @@ async def validate_bag(transaction_id: str, response: Response):
     Example Tx: `rYa3ILXqWi_V52xPoG70y2EupPsTtu4MsMmz6DI4fy4`
     """
     return await _validate_bag(transaction_id, response)
+
+
+@app.get("/get_version/", tags=[TAG_MAINTAIN])
+async def get_version_info():
+    """Return API version information to the caller."""
+    return await _get_version_info()
