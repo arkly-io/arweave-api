@@ -16,16 +16,16 @@ extension-pkg-whitelist=
     pydantic, # binary module validation, Pydantic/Pylint recommendation.
 
 ignore=
-	LICENSE,
-	.pylintrc,
+    LICENSE,
+    .pylintrc,
 
 ignore-patterns=
-	^(.+).ini$,
-	.gitignore,
-	.pre-commit-config.yaml,
-	^(.+).md$,
-	^(.+).sh$,
-	^(.+).service$,
+    ^(.+).ini$,
+    .gitignore,
+    .pre-commit-config.yaml,
+    ^(.+).md$,
+    ^(.+).sh$,
+    ^(.+).service$,
     ^(.+).env,
     ^(.+).toml,
 
@@ -40,5 +40,5 @@ ignore-paths=
 [MESSAGES CONTROL]
 
 disable =
-	C0301, 	# line-length too long, see Black documented recommendations.
-	W3101,  # requests library, missing timeout, new on upgrade from 2.14 to 2.15
+    C0301, 	# line-length too long, see Black documented recommendations.
+    W3101,  # requests library, missing timeout, new on upgrade from 2.14 to 2.15

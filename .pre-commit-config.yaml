@@ -12,6 +12,13 @@ repos:
   rev: v2.2.4
   hooks:
     - id: codespell
+      exclude: >
+          (?x)^(
+              .*\.json|
+              .*\.pyc|
+              \.tox|
+              .*\.yaml
+          )$
 - repo: https://github.com/ambv/black
   rev: 23.3.0
   hooks:

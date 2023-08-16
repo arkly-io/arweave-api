@@ -1,8 +1,8 @@
 # Installing the arweave-api as a service
 
-The arweave-api can be run as a systemd service. 
+The arweave-api can be run as a systemd service.
 
-The service will be installed at 
+The service will be installed at
 `/etc/systemd/system/arkly-arweave-api.service`. The service will be called:
 `arkly-arweave-api`.
 
