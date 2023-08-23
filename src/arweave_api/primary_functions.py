@@ -59,6 +59,8 @@ ARKLY_AGENT = f"api.arkly.io/{get_version()}"
 # Beginning by incrementally working through the issues.
 ERR_WALLET: Final[str] = "error handling wallet"
 
+PACKAGING_AGENT_STRING = "Packaging-Agent"
+
 
 def _file_from_data(file_data):
     """Return a file-like BytesIO stream from Base64 encoded data."""
@@ -289,13 +291,12 @@ async def _fetch_upload(transaction_id: str) -> FileResponse:
 async def bag_files(path: Path, tag_list=None) -> None:
     """Use python Bagit to bag the files for Arkly-Arweave."""
     if not tag_list:
-        bagit.make_bag(path, {"packaging-agent": ARKLY_AGENT})
+        bagit.make_bag(path, {PACKAGING_AGENT_STRING: ARKLY_AGENT})
         return
-
     bag_info = {}
     for tag in tag_list:
         bag_info[f"{tag.name}".replace(" ", "-")] = tag.value
-    bag_info["packaging-agent"] = ARKLY_AGENT
+    bag_info[PACKAGING_AGENT_STRING] = ARKLY_AGENT
     logger.info("writing package with bag-info: %d", bag_info)
     bagit.make_bag(path, bag_info)
     return
