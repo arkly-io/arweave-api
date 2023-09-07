@@ -101,14 +101,16 @@ async def retrieve_wallet_address_from_keyfile(wallet: UploadFile):
 
 @app.post("/check_wallet_balance/", tags=[TAG_ARWEAVE_WALLET])
 async def check_wallet_balance_with_keyfile(wallet: UploadFile):
-    """Allows a user to check the balance of their wallet."""
+    """Allows a user to check the balance of their wallet using an
+    Arweave wallet keyfile.
+    """
     return await primary_functions._check_balance_post(wallet)
 
 
 @app.post("/check_wallet_last_transaction/", tags=[TAG_ARWEAVE_WALLET])
 async def check_wallet_last_transaction_with_keyfile(wallet: UploadFile):
     """Allows a user to check the transaction ID of their last
-    transaction.
+    transaction using an Arweave wallet keyfile.
     """
     return await primary_functions._check_last_transaction_post(wallet)
 
@@ -128,7 +130,7 @@ async def check_wallet_balance(wallet_address: str):
 @app.get("/check_wallet_last_transaction/", tags=[TAG_ARWEAVE_WALLET])
 async def check_wallet_last_transaction(wallet_address: str):
     """Allows a user to check the transaction ID of their last
-    transaction.
+    transaction using a given wallet address.
 
     Example wallet address: `6KymaAPWd3JNyMT0B7EPYij4TWxehhMrzRD8qifCSLs`
     """
