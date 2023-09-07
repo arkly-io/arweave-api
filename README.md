@@ -40,7 +40,7 @@ deactivate
 
 ## Usage :computer:
 
-To start the server locally, run `uvicorn main:app --reload`
+To start the server locally, run `python -m src.arweave_api.arweave_api`
 
 ## Testing :gear:
 
