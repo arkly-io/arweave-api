@@ -14,14 +14,17 @@ try:
     from models import Tags
     from primary_functions import (
         _all_transactions,
-        _check_balance,
-        _check_last_transaction,
+        _check_balance_get,
+        _check_balance_post,
+        _check_last_transaction_get,
+        _check_last_transaction_post,
         _check_transaction_status,
         _create_transaction,
         _estimate_transaction_cost,
         _fetch_tx_metadata,
         _fetch_upload,
         _get_version_info,
+        _get_wallet_address,
         _retrieve_by_tag_pair,
         _validate_bag,
     )
@@ -32,14 +35,17 @@ except ModuleNotFoundError:
         from src.arweave_api.models import Tags
         from src.arweave_api.primary_functions import (
             _all_transactions,
-            _check_balance,
-            _check_last_transaction,
+            _check_balance_get,
+            _check_balance_post,
+            _check_last_transaction_get,
+            _check_last_transaction_post,
             _check_transaction_status,
             _create_transaction,
             _estimate_transaction_cost,
             _fetch_tx_metadata,
             _fetch_upload,
             _get_version_info,
+            _get_wallet_address,
             _retrieve_by_tag_pair,
             _validate_bag,
         )
@@ -49,14 +55,17 @@ except ModuleNotFoundError:
         from arweave_api.models import Tags
         from arweave_api.primary_functions import (
             _all_transactions,
-            _check_balance,
-            _check_last_transaction,
+            _check_balance_get,
+            _check_balance_post,
+            _check_last_transaction_get,
+            _check_last_transaction_post,
             _check_transaction_status,
             _create_transaction,
             _estimate_transaction_cost,
             _fetch_tx_metadata,
             _fetch_upload,
             _get_version_info,
+            _get_wallet_address,
             _retrieve_by_tag_pair,
             _validate_bag,
         )
@@ -129,18 +138,46 @@ def redirect_root_to_docs():
     return RedirectResponse(url="/docs")
 
 
+@app.post("/retrieve_wallet_address/", tags=[TAG_ARWEAVE_WALLET])
+async def retrieve_wallet_address_from_keyfile(wallet: UploadFile):
+    """Retrieve a wallet address from an Arweave wallet keyfile."""
+    return await _get_wallet_address(wallet)
+
+
 @app.post("/check_wallet_balance/", tags=[TAG_ARWEAVE_WALLET])
-async def check_wallet_balance(wallet: UploadFile):
+async def check_wallet_balance_with_keyfile(wallet: UploadFile):
     """Allows a user to check the balance of their wallet."""
-    return await _check_balance(wallet)
+    return await _check_balance_post(wallet)
 
 
 @app.post("/check_wallet_last_transaction/", tags=[TAG_ARWEAVE_WALLET])
-async def check_wallet_last_transaction(wallet: UploadFile):
+async def check_wallet_last_transaction_with_keyfile(wallet: UploadFile):
     """Allows a user to check the transaction ID of their last
     transaction.
     """
-    return await _check_last_transaction(wallet)
+    return await _check_last_transaction_post(wallet)
+
+
+@app.get("/check_wallet_balance/", tags=[TAG_ARWEAVE_WALLET])
+async def check_wallet_balance(wallet_address: str):
+    """Allows a user to check the balance of a given wallet address.
+
+    Balance is reported in Ar with a Winstons field also provided
+    to the caller.
+
+    Example wallet address: `6KymaAPWd3JNyMT0B7EPYij4TWxehhMrzRD8qifCSLs`
+    """
+    return await _check_balance_get(wallet_address)
+
+
+@app.get("/check_wallet_last_transaction/", tags=[TAG_ARWEAVE_WALLET])
+async def check_wallet_last_transaction(wallet_address: str):
+    """Allows a user to check the transaction ID of their last
+    transaction.
+
+    Example wallet address: `6KymaAPWd3JNyMT0B7EPYij4TWxehhMrzRD8qifCSLs`
+    """
+    return await _check_last_transaction_get(wallet_address)
 
 
 @app.get("/estimate_transaction_cost/", tags=[TAG_ARWEAVE])

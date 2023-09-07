@@ -35,16 +35,16 @@ from fastapi import File, HTTPException, Response, UploadFile, status
 from fastapi.responses import FileResponse
 
 try:
-    from arweave_utilities import winston_to_ar
+    from arweave_utilities import ar_to_winston, winston_to_ar
     from models import Tags
     from version import get_version
 except ModuleNotFoundError:
     try:
-        from src.arweave_api.arweave_utilities import winston_to_ar
+        from src.arweave_api.arweave_utilities import ar_to_winston, winston_to_ar
         from src.arweave_api.models import Tags
         from src.arweave_api.version import get_version
     except ModuleNotFoundError:
-        from arweave_api.arweave_utilities import winston_to_ar
+        from arweave_api.arweave_utilities import ar_to_winston, winston_to_ar
         from arweave_api.models import Tags
         from arweave_api.version import get_version
 
@@ -97,30 +97,35 @@ async def create_temp_wallet(file: UploadFile) -> arweave.Wallet:
     return wallet
 
 
-async def _check_balance(wallet: UploadFile) -> dict:
-    """Allows a user to check the balance of their wallet.
-
-    :param file: JWK file, defaults to File(...)
-    :type file: JSON
-    :return: The balance of your wallet as a JSON object
-    :rtype: JSON object
+async def _get_wallet_address(wallet: UploadFile) -> dict:
+    """Allows a user to retrieve a wallet address from a given Arweave
+    key file.
     """
     jwk_file = wallet
     wallet = await create_temp_wallet(jwk_file)
     if wallet != ERR_WALLET:
-        balance = wallet.balance
-        return {"balance": balance}
-    return {"balance": "Error on wallet load."}
+        return {"wallet_address": wallet.address}
+    return {"wallet_address": "error reading Arweave keyfile"}
 
 
-async def _check_last_transaction(wallet: UploadFile) -> dict:
+async def _check_balance_post(wallet: UploadFile) -> dict:
+    """Allows a user to check the balance of their wallet."""
+    jwk_file = wallet
+    wallet = await create_temp_wallet(jwk_file)
+    if wallet == ERR_WALLET:
+        return {"balance": "error reading Arweave keyfile"}
+    arweave_ar = wallet.balance
+    winstons = ar_to_winston(arweave_ar)
+    return {
+        "wallet_address": wallet.address,
+        "ar": arweave_ar,
+        "winstons": winstons,
+    }
+
+
+async def _check_last_transaction_post(wallet: UploadFile) -> dict:
     """Allows a user to check the transaction id of their last
     transaction.
-
-    :param file: JWK file, defaults to File(...)
-    :type file: UploadFile, optional
-    :return: The transaction id as a JSON object
-    :rtype: JSON object
     """
     wallet = await create_temp_wallet(wallet)
     if wallet != ERR_WALLET:
@@ -131,7 +136,36 @@ async def _check_last_transaction(wallet: UploadFile) -> dict:
             "wallet_address": f"{wallet.address}",
             "last_transaction_id": f"{ARWEAVE_VIEW_BASEURL}/tx/{last_transaction.text}",
         }
-    return {"last_transaction_id": "Failure to get response..."}
+    return {"last_transaction_id": "error reading Arweave keyfile"}
+
+
+async def _check_balance_get(wallet_address: str) -> dict:
+    """Allows a user to check the balance of a given wallet address
+    without loading a wallet into memory.
+    """
+    balance_url = f"{ARWEAVE_API_BASEURL}/wallet/{wallet_address}/balance"
+    logger.info("requesting balance at: %s", balance_url)
+    resp = requests.get(balance_url)
+    winstons = int(resp.text)
+    arweave_ar = winston_to_ar(resp.text)
+    return {
+        "wallet_address": wallet_address,
+        "ar": arweave_ar,
+        "winstons": winstons,
+    }
+
+
+async def _check_last_transaction_get(wallet_address: str) -> dict:
+    """Allows a user to check the last transaction of a wallet without
+    having to load a wallet into memory.
+    """
+    tx_url = f"{ARWEAVE_API_BASEURL}/wallet/{wallet_address}/last_tx"
+    logger.info("requesting last transaction at: %s", tx_url)
+    last_transaction = requests.get(tx_url)
+    return {
+        "wallet_address": f"{wallet_address}",
+        "last_transaction_id": f"{ARWEAVE_VIEW_BASEURL}/tx/{last_transaction.text}",
+    }
 
 
 async def _check_transaction_status(transaction_id: int) -> dict:
@@ -169,10 +203,10 @@ async def _estimate_transaction_cost(size_in_bytes: str) -> dict:
     """
     if size_in_bytes.isdigit():
         cost_estimate = requests.get(f"{ARWEAVE_API_BASEURL}/price/{size_in_bytes}/")
-        winston_str = winston_to_ar(cost_estimate.text)
-        return {"estimate_transaction_cost": winston_str}
+        winstons = winston_to_ar(cost_estimate.text)
+        return {"estimate_transaction_cost": winstons}
     return {
-        "estimate_transaction_cost": "Parameter issue. Please enter a valid amount of bytes as an integer."
+        "estimate_transaction_cost": "please ensure that the number of bytes is entered as an integer"
     }
 
 
@@ -258,7 +292,7 @@ async def _fetch_tx_metadata(transaction_id: str) -> dict:
     data["tags"] = decoded_tags
 
     # Humanize reward output for Arkly's end-users.
-    data["reward_winston"] = data["reward"]
+    data["reward_winston"] = int(data["reward"])
     data["reward_ar"] = winston_to_ar(data["reward"])
     data.pop("reward")
     return data

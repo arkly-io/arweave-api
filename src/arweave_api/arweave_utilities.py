@@ -13,10 +13,16 @@ def winston_to_ar(winston: str) -> str:
 
     Ar is the more human-readable format.
     """
+
     length = len(winston)
     if length > 12:
         past_twelve = length - 12
-        return f"{winston[0:past_twelve]}.{winston[-12:]}"
+        return float(f"{winston[0:past_twelve]}.{winston[-12:]}")
     lessthan_twelve = 12 - length
     less_than_format = "0" * lessthan_twelve
-    return f"0.{less_than_format}{winston}"
+    return float(f"0.{less_than_format}{winston}")
+
+
+def ar_to_winston(arweave_ar: float) -> int:
+    """Convert Ar to Winstons."""
+    return int(float(arweave_ar) * 1000000000000.0)
