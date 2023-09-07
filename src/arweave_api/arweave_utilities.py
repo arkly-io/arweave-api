@@ -1,7 +1,7 @@
 """Low-level Arweave API utility functions."""
 
 
-def winston_to_ar(winston: str) -> str:
+def winston_to_ar(winston: str) -> float:
     """Convert Winstons to Ar.
 
     Winstons are the smallest possible unit of Ar.
@@ -13,13 +13,13 @@ def winston_to_ar(winston: str) -> str:
 
     Ar is the more human-readable format.
     """
-
+    winston = f"{winston}"  # ensure that the supplied value is a string.
     length = len(winston)
     if length > 12:
         past_twelve = length - 12
         return float(f"{winston[0:past_twelve]}.{winston[-12:]}")
-    lessthan_twelve = 12 - length
-    less_than_format = "0" * lessthan_twelve
+    less_than_twelve = 12 - length
+    less_than_format = "0" * less_than_twelve
     return float(f"0.{less_than_format}{winston}")
 
 

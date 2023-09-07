@@ -12,7 +12,7 @@ from src.arweave_api.arweave_utilities import ar_to_winston, winston_to_ar
         ("1000000000000", 1.0),
         ("1", 0.000000000001),
         # Arweave client given example.
-        ("938884", 0.000000938884),
+        (938884, 0.000000938884),
         # Examples from arconverter.com.
         ("12000000000000", 12.0),
         ("3142000000000", 3.142),
