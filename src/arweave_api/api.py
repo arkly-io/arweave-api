@@ -10,65 +10,20 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import RedirectResponse
 
 try:
+    import primary_functions
     from middleware import _update_db
     from models import Tags
-    from primary_functions import (
-        _all_transactions,
-        _check_balance_get,
-        _check_balance_post,
-        _check_last_transaction_get,
-        _check_last_transaction_post,
-        _check_transaction_status,
-        _create_transaction,
-        _estimate_transaction_cost,
-        _fetch_tx_metadata,
-        _fetch_upload,
-        _get_version_info,
-        _get_wallet_address,
-        _retrieve_by_tag_pair,
-        _validate_bag,
-    )
     from version import get_version
 except ModuleNotFoundError:
     try:
+        from src.arweave_api import primary_functions
         from src.arweave_api.middleware import _update_db
         from src.arweave_api.models import Tags
-        from src.arweave_api.primary_functions import (
-            _all_transactions,
-            _check_balance_get,
-            _check_balance_post,
-            _check_last_transaction_get,
-            _check_last_transaction_post,
-            _check_transaction_status,
-            _create_transaction,
-            _estimate_transaction_cost,
-            _fetch_tx_metadata,
-            _fetch_upload,
-            _get_version_info,
-            _get_wallet_address,
-            _retrieve_by_tag_pair,
-            _validate_bag,
-        )
         from src.arweave_api.version import get_version
     except ModuleNotFoundError:
+        from arweave_api import primary_functions
         from arweave_api.middleware import _update_db
         from arweave_api.models import Tags
-        from arweave_api.primary_functions import (
-            _all_transactions,
-            _check_balance_get,
-            _check_balance_post,
-            _check_last_transaction_get,
-            _check_last_transaction_post,
-            _check_transaction_status,
-            _create_transaction,
-            _estimate_transaction_cost,
-            _fetch_tx_metadata,
-            _fetch_upload,
-            _get_version_info,
-            _get_wallet_address,
-            _retrieve_by_tag_pair,
-            _validate_bag,
-        )
         from arweave_api.version import get_version
 
 # Arkly-arweave API description.
@@ -141,13 +96,13 @@ def redirect_root_to_docs():
 @app.post("/retrieve_wallet_address/", tags=[TAG_ARWEAVE_WALLET])
 async def retrieve_wallet_address_from_keyfile(wallet: UploadFile):
     """Retrieve a wallet address from an Arweave wallet keyfile."""
-    return await _get_wallet_address(wallet)
+    return await primary_functions._get_wallet_address(wallet)
 
 
 @app.post("/check_wallet_balance/", tags=[TAG_ARWEAVE_WALLET])
 async def check_wallet_balance_with_keyfile(wallet: UploadFile):
     """Allows a user to check the balance of their wallet."""
-    return await _check_balance_post(wallet)
+    return await primary_functions._check_balance_post(wallet)
 
 
 @app.post("/check_wallet_last_transaction/", tags=[TAG_ARWEAVE_WALLET])
@@ -155,7 +110,7 @@ async def check_wallet_last_transaction_with_keyfile(wallet: UploadFile):
     """Allows a user to check the transaction ID of their last
     transaction.
     """
-    return await _check_last_transaction_post(wallet)
+    return await primary_functions._check_last_transaction_post(wallet)
 
 
 @app.get("/check_wallet_balance/", tags=[TAG_ARWEAVE_WALLET])
@@ -167,7 +122,7 @@ async def check_wallet_balance(wallet_address: str):
 
     Example wallet address: `6KymaAPWd3JNyMT0B7EPYij4TWxehhMrzRD8qifCSLs`
     """
-    return await _check_balance_get(wallet_address)
+    return await primary_functions._check_balance_get(wallet_address)
 
 
 @app.get("/check_wallet_last_transaction/", tags=[TAG_ARWEAVE_WALLET])
@@ -177,7 +132,7 @@ async def check_wallet_last_transaction(wallet_address: str):
 
     Example wallet address: `6KymaAPWd3JNyMT0B7EPYij4TWxehhMrzRD8qifCSLs`
     """
-    return await _check_last_transaction_get(wallet_address)
+    return await primary_functions._check_last_transaction_get(wallet_address)
 
 
 @app.get("/estimate_transaction_cost/", tags=[TAG_ARWEAVE])
@@ -185,7 +140,7 @@ async def estimate_transaction_cost(size_in_bytes: str):
     """Allows a user to get an estimate of how much a transaction may
     cost.
     """
-    return await _estimate_transaction_cost(size_in_bytes)
+    return await primary_functions._estimate_transaction_cost(size_in_bytes)
 
 
 @app.get("/check_transaction_status/", tags=[TAG_ARWEAVE])
@@ -195,7 +150,7 @@ async def check_transaction_status(transaction_id: str):
 
     Example Tx: `rYa3ILXqWi_V52xPoG70y2EupPsTtu4MsMmz6DI4fy4`
     """
-    return await _check_transaction_status(transaction_id)
+    return await primary_functions._check_transaction_status(transaction_id)
 
 
 @app.get("/fetch_transaction/", tags=[TAG_ARWEAVE])
@@ -205,7 +160,7 @@ async def fetch_transaction(transaction_id: str):
 
     Example Tx: `rYa3ILXqWi_V52xPoG70y2EupPsTtu4MsMmz6DI4fy4`
     """
-    return await _fetch_upload(transaction_id)
+    return await primary_functions._fetch_upload(transaction_id)
 
 
 @app.get("/fetch_transaction_metadata/", tags=[TAG_ARWEAVE])
@@ -215,7 +170,7 @@ async def fetch_transaction_metadata(transaction_id: str):
 
     Example Tx: `rYa3ILXqWi_V52xPoG70y2EupPsTtu4MsMmz6DI4fy4`
     """
-    return await _fetch_tx_metadata(transaction_id)
+    return await primary_functions._fetch_tx_metadata(transaction_id)
 
 
 @app.get("/all_wallet_transactions/", tags=[TAG_ARWEAVE_SEARCH])
@@ -225,7 +180,7 @@ async def get_all_wallet_transactions(wallet_addr: str):
 
     Example wallet: `6KymaAPWd3JNyMT0B7EPYij4TWxehhMrzRD8qifCSLs`
     """
-    return await _all_transactions(wallet_addr)
+    return await primary_functions._all_transactions(wallet_addr)
 
 
 @app.get("/transactions_by_tag_pair/", tags=[TAG_ARWEAVE_SEARCH])
@@ -235,7 +190,7 @@ async def get_transactions_by_tag_pair(name: str, value: str):
     Example tag key: `x-tag`
     Example tag value: `arkly hello world!`
     """
-    return await _retrieve_by_tag_pair(name, value)
+    return await primary_functions._retrieve_by_tag_pair(name, value)
 
 
 @app.post("/create_transaction/", tags=[TAG_ARKLY])
@@ -246,7 +201,9 @@ async def create_transaction(
     tags: Tags | None = None,
 ):
     """Create an Arkly package and Arweave transaction."""
-    return await _create_transaction(wallet, files, package_file_name, tags)
+    return await primary_functions._create_transaction(
+        wallet, files, package_file_name, tags
+    )
 
 
 @app.get("/validate_arkly_bag/", tags=[TAG_ARKLY])
@@ -255,10 +212,10 @@ async def validate_bag(transaction_id: str, response: Response):
 
     Example Tx: `rYa3ILXqWi_V52xPoG70y2EupPsTtu4MsMmz6DI4fy4`
     """
-    return await _validate_bag(transaction_id, response)
+    return await primary_functions._validate_bag(transaction_id, response)
 
 
 @app.get("/get_version/", tags=[TAG_MAINTAIN])
 async def get_version_info():
     """Return API version information to the caller."""
-    return await _get_version_info()
+    return await primary_functions._get_version_info()

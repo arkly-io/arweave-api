@@ -42,3 +42,5 @@ ignore-paths=
 disable =
     C0301, 	# line-length too long, see Black documented recommendations.
     W3101,  # requests library, missing timeout, new on upgrade from 2.14 to 2.15
+    # Consider fixing.
+    W0212,  # access to protected member. Used as a convenience in code to distinguise API wrapping functions.
