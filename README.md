@@ -2,7 +2,44 @@
 
 This API allows users to upload their files permanently onto Arweave.
 
-## Installation :star:
+# Table of contents
+
+- [Arweave API](#arweave-api)
+  - [Install from package :package:](#install-from-package-package)
+  - [Install for development :star:](#install-for-development-star)
+  - [Usage :computer:](#usage-computer)
+  - [Testing :gear:](#testing-gear)
+  - [Endpoint documentation :scroll:](#endpoint-documentation-scroll)
+
+## Install from package :package:
+
+Once you have selected a package from the releases, take for example
+`arweave_api-2023.9.7.1`:
+
+Install with:
+
+```sh
+# Setup a virtual environment
+python3 -m venv venv
+# Activate the virtual environment
+source venv/bin/activate
+# Install using python-pip
+python -m pip install -r arweave_api-2023.9.7.1-py3-none-any.whl
+```
+
+### To show startup options:
+
+```sh
+arweave-api -h
+```
+
+### To run on the default port:
+
+```sh
+arweave-api
+```
+
+## Install for development :star:
 
 It is recommended to run a virtual environment locally. To do this, run the
 following:
