@@ -11,18 +11,15 @@ from fastapi.responses import RedirectResponse
 
 try:
     import primary_functions
-    from middleware import _update_db
     from models import Tags
     from version import get_version
 except ModuleNotFoundError:
     try:
         from src.arweave_api import primary_functions
-        from src.arweave_api.middleware import _update_db
         from src.arweave_api.models import Tags
         from src.arweave_api.version import get_version
     except ModuleNotFoundError:
         from arweave_api import primary_functions
-        from arweave_api.middleware import _update_db
         from arweave_api.models import Tags
         from arweave_api.version import get_version
 
@@ -33,7 +30,7 @@ API_DESCRIPTION: Final[str] = " "
 TAG_ARWEAVE: Final[str] = "arweave"
 TAG_ARWEAVE_WALLET: Final[str] = "arweave wallet"
 TAG_ARWEAVE_SEARCH: Final[str] = "arweave search"
-TAG_ARKLY: Final[str] = "arkly"
+TAG_ARKLY: Final[str] = "packaging"
 TAG_MAINTAIN: Final[str] = "maintenance"
 
 # Metadata for each of the tags in the OpenAPI specification. To order
@@ -53,12 +50,12 @@ tags_metadata = [
     },
     {
         "name": TAG_ARKLY,
-        "description": "Arkly functions on-top of Arweave",
+        "description": " functions on-top of Arweave",
     },
 ]
 
 app = FastAPI(
-    title="api.arkly.io",
+    title="arweave API",
     description=API_DESCRIPTION,
     version=get_version(),
     contact={
@@ -75,14 +72,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-
-@app.middleware("http")
-async def update_db(request: Request, call_next):
-    """Middleware used to identify which endpoint is being used so that
-    the database can be updated effectively.
-    """
-    return await _update_db(request, call_next)
 
 
 @app.get("/", include_in_schema=False)
@@ -198,23 +187,17 @@ async def get_transactions_by_tag_pair(name: str, value: str):
 @app.post("/create_transaction/", tags=[TAG_ARKLY])
 async def create_transaction(
     wallet: UploadFile,
-    package_file_name: str,
-    files: List[UploadFile] = File(...),
+    file: list[UploadFile] = File(...),
+    mime_type: str = None,
     tags: Tags | None = None,
 ):
     """Create an Arkly package and Arweave transaction."""
     return await primary_functions._create_transaction(
-        wallet, files, package_file_name, tags
+        wallet=wallet,
+        files=file,
+        mime_type=mime_type,
+        tags=tags,
     )
-
-
-@app.get("/validate_arkly_bag/", tags=[TAG_ARKLY])
-async def validate_bag(transaction_id: str, response: Response):
-    """Given an Arweave transaction ID, Validate an Arkly link as a bag.
-
-    Example Tx: `rYa3ILXqWi_V52xPoG70y2EupPsTtu4MsMmz6DI4fy4`
-    """
-    return await primary_functions._validate_bag(transaction_id, response)
 
 
 @app.get("/get_version/", tags=[TAG_MAINTAIN])
