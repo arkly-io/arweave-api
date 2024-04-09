@@ -26,7 +26,6 @@ from pathlib import Path
 from typing import Final, List
 
 import arweave
-import bagit
 import humanize
 import requests
 from arweave.arweave_lib import Transaction, arql
@@ -322,55 +321,10 @@ async def _fetch_upload(transaction_id: str) -> FileResponse:
         raise HTTPException from err
 
 
-async def bag_files(path: Path, tag_list=None) -> None:
-    """Use python Bagit to bag the files for Arkly-Arweave."""
-    if not tag_list:
-        bagit.make_bag(path, {PACKAGING_AGENT_STRING: ARKLY_AGENT})
-        return
-    bag_info = {}
-    for tag in tag_list:
-        bag_info[f"{tag.name}".replace(" ", "-")] = tag.value
-    bag_info[PACKAGING_AGENT_STRING] = ARKLY_AGENT
-    logger.info("writing package with bag-info: %d", bag_info)
-    bagit.make_bag(path, bag_info)
-    return
-
-
-async def _package_content(
-    files: List[UploadFile] = File(...), package_name: str = None, tag_list: list = None
-) -> dict:
-    """Package the files submitted to the create_transaction endpoint."""
-    # Create a folder for the user's wallet.
-    tmp_dir = tempfile.mkdtemp()
-    file_path = Path(tmp_dir, package_name)
-    file_path.mkdir()
-
-    logger.info("Location to write object to: %s", file_path)
-
-    for file in files:
-        read_file = await file.read()
-        output_file = Path(file_path, file.filename)
-        output_file.write_bytes(read_file)
-
-    # Bag these files.
-    await bag_files(file_path, tag_list)
-
-    # Create compressed .tar.gz file
-    tar_file_name = file_path.with_suffix(".tar.gz")
-    with tarfile.open(tar_file_name, "w:gz") as tar:
-        tar.add(file_path, arcname=os.path.basename(file_path))
-
-    version_api: Final[str] = "v0"
-    tar_file_name = tar_file_name.rename(
-        f"{tar_file_name}".replace(".tar.gz", f"_{version_api}.tar.gz")
-    )
-    return tar_file_name
-
-
 async def _create_transaction(
     wallet: UploadFile,
-    files: List[UploadFile] = File(...),
-    package_file_name: str = None,
+    files: list[UploadFile] = File(...),
+    mime_type: str = None,
     tags: Tags = None,
 ) -> dict:
     """Create an Arkly package and Arweave transaction.
@@ -398,21 +352,29 @@ async def _create_transaction(
     except AttributeError:
         logger.info("no user-defined tags provided by caller")
 
-    # Create a package from files array. Package content will create
-    # this in a secure temporary directory.
-    tar_file_name = await _package_content(files, package_file_name, tag_list)
-
-    logger.info("Adding version to package: %s", tar_file_name)
-    logger.info("New path exists: %s", tar_file_name.is_file())
     logger.info("Wallet balance before upload: %s", wallet.balance)
 
-    with open(tar_file_name, "rb", buffering=0) as file_handler:
+    tmp_dir = tempfile.mkdtemp()
+    file_path = Path(tmp_dir, "upload_path")
+    file_path.mkdir()
+
+    logger.info("Location to write object to: %s", file_path)
+
+    output_file = None
+    for file in files:
+        read_file = await file.read()
+        output_file = Path(file_path, file.filename)
+        output_file.write_bytes(read_file)
+        break
+
+    logger.info("attempting to upload: %s", output_file)
+
+    with open(output_file, "rb", buffering=0) as file_handler:
         new_transaction = Transaction(
-            wallet, file_handler=file_handler, file_path=tar_file_name
+            wallet, file_handler=file_handler, file_path=output_file,
         )
         # Default tags for the tar/gzip file that we create.
-        new_transaction.add_tag("Content-Type", "application/gzip")
-
+        new_transaction.add_tag("Content-Type", mime_type)
         for tag in tag_list:
             logger.info("Adding tag: %s: %s", tag.name, tag.value)
             new_transaction.add_tag(tag.name, tag.value)
@@ -443,60 +405,6 @@ def _get_arweave_urls_from_tx(transaction_id: str) -> dict:
         f"{ARWEAVE_VIEW_BASEURL}/tx/{transaction_id}",
         f"{ARWEAVE_API_BASEURL}/{transaction_id}",
     )
-
-
-async def _validate_bag(transaction_id: str, response: Response) -> dict:
-    """Given an Arweave transaction ID, Validate an Arkly link as a bag."""
-
-    # Setup retrieval of the data from the given transaction.
-    transaction_url, arweave_url = _get_arweave_urls_from_tx(transaction_id)
-    arweave_response = requests.get(arweave_url, allow_redirects=True)
-
-    # Create temp file to extract the contents from Arweave to.
-    tmp_file_handle, tmp_file_path = tempfile.mkstemp()
-    with open(tmp_file_handle, "wb") as write_tar_gz:
-        write_tar_gz.write(arweave_response.content)
-
-    tmp_dir = tempfile.mkdtemp()
-    try:
-        arkly_gzip = tarfile.open(tmp_file_path)
-        arkly_gzip.extractall(tmp_dir)
-    except tarfile.ReadError:
-        response.status_code = status.HTTP_422_UNPROCESSABLE_ENTITY
-        return {
-            "transaction_url": transaction_url,
-            "file_url": arweave_url,
-            "valid": "UNKNOWN",
-        }
-
-    try:
-        bag_name = os.listdir(tmp_dir)[0]
-        bag_file = Path(tmp_dir) / bag_name
-    except IndexError:
-        response.status_code = status.HTTP_404_NOT_FOUND
-        return {
-            "transaction_url": transaction_url,
-            "file_url": arweave_url,
-            "valid": "UNKNOWN",
-        }
-
-    # Create bag object and validate, and return information from it.
-    try:
-        arkly_bag = bagit.Bag(str(bag_file))
-        return {
-            "transaction_url": transaction_url,
-            "file_url": arweave_url,
-            "valid": f"{arkly_bag.validate()}",
-            "bag_info": arkly_bag.info,
-            "bag_name": bag_name,
-        }
-    except bagit.BagError:
-        response.status_code = status.HTTP_422_UNPROCESSABLE_ENTITY
-        return {
-            "transaction_url": transaction_url,
-            "file_url": arweave_url,
-            "valid": "UNKNOWN",
-        }
 
 
 async def _all_transactions(wallet_addr: str):
@@ -537,4 +445,4 @@ async def _retrieve_by_tag_pair(name: str, value: str) -> dict:
 
 async def _get_version_info() -> dict:
     """Return information about the versions used by this API."""
-    return {"api": get_version(), "agent": ARKLY_AGENT, "bagit": bagit.VERSION}
+    return {"api": get_version()}

@@ -19,7 +19,7 @@ name = "arweave-api"
 #
 dynamic = ["version"]
 
-description = "Arkly Arweave API"
+description = "NOT Arkly Arweave API"
 readme = "README.md"
 
 # Supported python versions. Optional, but helpful.
