@@ -331,7 +331,7 @@ async def bag_files(path: Path, tag_list=None) -> None:
     for tag in tag_list:
         bag_info[f"{tag.name}".replace(" ", "-")] = tag.value
     bag_info[PACKAGING_AGENT_STRING] = ARKLY_AGENT
-    logger.info("writing package with bag-info: %d", bag_info)
+    logger.info("writing package with bag-info: %s", bag_info)
     bagit.make_bag(path, bag_info)
     return
 
