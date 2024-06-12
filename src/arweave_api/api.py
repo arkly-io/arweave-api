@@ -5,24 +5,21 @@ communicate with Arweave, and put Arkly files on chain.
 """
 from typing import Final, List
 
-from fastapi import FastAPI, File, Request, Response, UploadFile
+from fastapi import FastAPI, File, Response, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import RedirectResponse
 
 try:
     import primary_functions
-    from middleware import _update_db
     from models import Tags
     from version import get_version
 except ModuleNotFoundError:
     try:
         from src.arweave_api import primary_functions
-        from src.arweave_api.middleware import _update_db
         from src.arweave_api.models import Tags
         from src.arweave_api.version import get_version
     except ModuleNotFoundError:
         from arweave_api import primary_functions
-        from arweave_api.middleware import _update_db
         from arweave_api.models import Tags
         from arweave_api.version import get_version
 
@@ -75,14 +72,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-
-@app.middleware("http")
-async def update_db(request: Request, call_next):
-    """Middleware used to identify which endpoint is being used so that
-    the database can be updated effectively.
-    """
-    return await _update_db(request, call_next)
 
 
 @app.get("/", include_in_schema=False)
