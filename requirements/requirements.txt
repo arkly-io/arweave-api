@@ -2,10 +2,10 @@
 
 arweave-python-client==1.0.19
 bagit==1.8.1
-fastapi==0.99.1
-humanize==4.7.0
-psycopg2-binary==2.9.3
-python-multipart==0.0.5
-requests==2.28.1
+fastapi==0.111.0
+humanize==4.9.0
+psycopg2-binary==2.9.9
+python-multipart==0.0.9
+requests==2.32.3
 ulid-py==1.1.0
-uvicorn==0.22.0
+uvicorn==0.30.1
