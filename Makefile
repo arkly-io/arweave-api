@@ -1,6 +1,6 @@
 .DEFAULT_GOAL := help
 
-.PHONY: clean package package-deps package-source package-upload package-wheel tar-source
+.PHONY: clean package package-deps package-source package-upload package-wheel tar-source upgrade
 
 tar-source: package-deps                                    ## Package repository as tar for easy distribution
 	rm -rf tar-src/
@@ -23,6 +23,9 @@ package-upload: clean package-deps package-check            ## Upload package to
 	twine upload dist/* --repository-url https://upload.pypi.org/legacy/ --verbose
 
 package: package-upload
+
+upgrade:                                                    ## Upgrade project dependencies.
+	pip-upgrade
 
 clean:                                                      ## Clean the package directory
 	rm -rf src/*.egg-info/
