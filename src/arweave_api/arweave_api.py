@@ -41,6 +41,22 @@ def main():
     )
 
     parser.add_argument(
+        "--workers",
+        help="number of workers for the app to use (auto-reload must be set to false)",
+        required=False,
+        type=int,
+        default=1,
+    )
+
+    parser.add_argument(
+        "--reload",
+        help="automatically reload changes in the app (workers will default to '1')",
+        required=False,
+        default=False,
+        action="store_true",
+    )
+
+    parser.add_argument(
         "--version",
         help="return the version of the app",
         required=False,
@@ -63,6 +79,9 @@ def main():
         logger.info("importing from %s", import_str)
 
     logger.info(
+        "number of workers requested: '%s', reload: '%s'", args.workers, args.reload
+    )
+    logger.info(
         "attempting API startup, try setting `--port` arg if there are any issues"
     )
 
@@ -72,7 +91,8 @@ def main():
         port=int(args.port),
         access_log=False,
         log_level="info",
-        reload=True,
+        reload=args.reload,
+        workers=args.workers,
     )
 
 
