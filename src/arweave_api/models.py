@@ -1,8 +1,12 @@
 """FastAPI models used in the Arweave API."""
+
 import json
+import logging
 from typing import List
 
 from pydantic import BaseModel
+
+logger = logging.getLogger(__name__)
 
 
 class FileItem(BaseModel):

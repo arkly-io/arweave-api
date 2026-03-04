@@ -15,6 +15,7 @@ In some cases the Arweave API client is overridden with pure Arweave API
 calls, especially "reading" where handling of wallets isn't required and
 we can limit exposure of this information.
 """
+
 import base64
 import json
 import logging
@@ -402,9 +403,9 @@ async def _create_transaction(
     # this in a secure temporary directory.
     tar_file_name = await _package_content(files, package_file_name, tag_list)
 
-    logger.info("Adding version to package: %s", tar_file_name)
-    logger.info("New path exists: %s", tar_file_name.is_file())
-    logger.info("Wallet balance before upload: %s", wallet.balance)
+    logger.info("adding version to package: %s", tar_file_name)
+    logger.info("new path exists: %s", tar_file_name.is_file())
+    logger.info("wallet balance before upload: %s", wallet.balance)
 
     with open(tar_file_name, "rb", buffering=0) as file_handler:
         new_transaction = Transaction(

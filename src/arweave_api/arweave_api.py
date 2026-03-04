@@ -16,7 +16,10 @@ except ModuleNotFoundError:
 logging.basicConfig(
     format="%(asctime)-15s %(levelname)s :: %(filename)s:%(lineno)s:%(funcName)s() :: %(message)s",
     datefmt="%Y-%m-%d %H:%M:%S",
-    level="INFO",
+    level=logging.INFO,
+    handlers=[
+        logging.StreamHandler(),
+    ],
 )
 
 logging.Formatter.converter = time.gmtime

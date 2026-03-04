@@ -3,6 +3,7 @@
 This module is an Arweave FastAPI server that allows users to
 communicate with Arweave, and put Arkly files on chain.
 """
+import logging
 from typing import Final, List
 
 from fastapi import FastAPI, File, Response, UploadFile
@@ -22,6 +23,10 @@ except ModuleNotFoundError:
         from arweave_api import primary_functions
         from arweave_api.models import Tags
         from arweave_api.version import get_version
+
+
+logger = logging.getLogger(__name__)
+
 
 # Arkly-arweave API description.
 API_DESCRIPTION: Final[str] = " "
