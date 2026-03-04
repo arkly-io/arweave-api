@@ -36,6 +36,7 @@ ignore-paths=
     tests/fixtures/vcrpy/.,
     .vscode/.,
     Makefile,
+    justfile,
 
 [MESSAGES CONTROL]
 
