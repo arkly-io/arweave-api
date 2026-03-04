@@ -5,6 +5,7 @@ bagit==1.8.1
 fastapi==0.111.0
 humanize==4.9.0
 psycopg2-binary==2.9.9
+pydantic==1.10.16
 python-multipart==0.0.9
 requests==2.32.3
 ulid-py==1.1.0
