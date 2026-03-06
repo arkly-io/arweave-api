@@ -1,10 +1,10 @@
 -r requirements.txt
 
-black==24.4.2
-flake8==7.0.0
-isort==5.13.2
+black==26.1.0
+flake8==7.3.0
+isort==8.0.1
 pip-upgrader==1.4.15
-pylint==3.2.3
-pytest==8.2.2
-tox==4.15.1
-vcrpy==6.0.1
+pylint==4.0.5
+pytest==9.0.2
+tox==4.48.1
+vcrpy==8.1.1
