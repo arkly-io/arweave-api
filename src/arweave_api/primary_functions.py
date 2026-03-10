@@ -24,11 +24,12 @@ import tarfile
 import tempfile
 from io import BytesIO
 from pathlib import Path
-from typing import Final, List
+from typing import Final, List, Tuple
 
 import arweave
 import bagit
 import humanize
+import jose
 import requests
 from arweave.arweave_lib import Transaction, arql
 from arweave.transaction_uploader import get_uploader
@@ -60,6 +61,12 @@ ARKLY_AGENT = f"api.arkly.io/{get_version()}"
 # Beginning by incrementally working through the issues.
 ERR_WALLET: Final[str] = "error handling wallet"
 
+# Error key.
+ERR_KEY: Final[str] = "error"
+
+# Length of a valid transaction ID.
+TX_ID_LEN: Final[int] = 43
+
 PACKAGING_AGENT_STRING = "Packaging-Agent"
 
 
@@ -69,56 +76,52 @@ def _file_from_data(file_data):
     return BytesIO(data)
 
 
-async def create_temp_wallet(file: UploadFile) -> arweave.Wallet:
+async def create_temp_wallet(file: UploadFile) -> Tuple[arweave.Wallet, str]:
     """A function that created a wallet object to be used in various API
     calls.
 
     :param file: JWK file, defaults to File(...)
     :type file: JSON
-    :return: Wallet object
+    :return: Tuple[Wallet object, error str]
     :rtype: _type_
     """
     hold = await file.read()
     try:
         json_obj = json.loads(hold)
-    except UnicodeDecodeError as err:
+    except (json.JSONDecodeError, UnicodeDecodeError) as err:
         logger.error("wallet data is invalid, likely the wrong input format: %s", err)
-        return ERR_WALLET
+        return None, f"{ERR_WALLET}: {err}"
     try:
-        wallet = arweave.Wallet.from_data(json_obj)
-    except Exception as err:  # pylint: disable=W0718
-        # There are a range of Exceptions we need to try to catch here
-        # (I think), e.g. jose.exceptions.JWKError if the JSON is completely
-        # invalid but we need to bottom these out. Eventually we do not want
-        # to catch a bare-exception.
+        wallet_obj = arweave.Wallet.from_data(json_obj)
+        return wallet_obj, None
+    except (
+        ValueError,
+        TypeError,
+        jose.exceptions.JWKError,
+    ) as err:
         logger.error("error in Arweave Client API module: %s", err)
-    if wallet is None:
-        logger.error("wallet object not made. Try another wallet, or try again.")
-        return ERR_WALLET
-    return wallet
+        return None, f"{ERR_WALLET}: {err}"
 
 
 async def _get_wallet_address(wallet: UploadFile) -> dict:
     """Allows a user to retrieve a wallet address from a given Arweave
     key file.
     """
-    jwk_file = wallet
-    wallet = await create_temp_wallet(jwk_file)
-    if wallet != ERR_WALLET:
-        return {"wallet_address": wallet.address}
-    return {"wallet_address": "error reading Arweave keyfile"}
+    wallet_obj, err = await create_temp_wallet(wallet)
+    if err is not None:
+        return {ERR_KEY: err}
+    return {"wallet_address": wallet_obj.address}
 
 
 async def _check_balance_post(wallet: UploadFile) -> dict:
     """Allows a user to check the balance of their wallet."""
-    jwk_file = wallet
-    wallet = await create_temp_wallet(jwk_file)
-    if wallet == ERR_WALLET:
-        return {"balance": "error reading Arweave keyfile"}
-    arweave_ar = wallet.balance
+    wallet_obj, err = await create_temp_wallet(wallet)
+    if err is not None:
+        return {ERR_KEY: err}
+    arweave_ar = wallet_obj.balance
     winstons = ar_to_winston(arweave_ar)
     return {
-        "wallet_address": wallet.address,
+        "wallet_address": wallet_obj.address,
         "ar": arweave_ar,
         "winstons": winstons,
     }
@@ -128,16 +131,16 @@ async def _check_last_transaction_post(wallet: UploadFile) -> dict:
     """Allows a user to check the transaction id of their last
     transaction.
     """
-    wallet = await create_temp_wallet(wallet)
-    if wallet != ERR_WALLET:
-        last_transaction = requests.get(
-            f"{ARWEAVE_API_BASEURL}/wallet/{wallet.address}/last_tx"
-        )
-        return {
-            "wallet_address": f"{wallet.address}",
-            "last_transaction_id": f"{ARWEAVE_VIEW_BASEURL}/tx/{last_transaction.text}",
-        }
-    return {"last_transaction_id": "error reading Arweave keyfile"}
+    wallet_obj, err = await create_temp_wallet(wallet)
+    if err is not None:
+        return {ERR_KEY: err}
+    last_transaction = requests.get(
+        f"{ARWEAVE_API_BASEURL}/wallet/{wallet_obj.address}/last_tx"
+    )
+    return {
+        "wallet_address": f"{wallet_obj.address}",
+        "last_transaction_id": f"{ARWEAVE_VIEW_BASEURL}/tx/{last_transaction.text}",
+    }
 
 
 async def _check_balance_get(wallet_address: str) -> dict:
@@ -147,6 +150,8 @@ async def _check_balance_get(wallet_address: str) -> dict:
     balance_url = f"{ARWEAVE_API_BASEURL}/wallet/{wallet_address}/balance"
     logger.info("requesting balance at: %s", balance_url)
     resp = requests.get(balance_url)
+    if resp.status_code != 200:
+        return {ERR_KEY: f"{resp.status_code} {resp.reason}"}
     winstons = int(resp.text)
     arweave_ar = winston_to_ar(resp.text)
     return {
@@ -178,14 +183,18 @@ async def _check_transaction_status(transaction_id: int) -> dict:
     :return: The transaction id as a JSON object
     :rtype: JSON object
     """
-    if len(transaction_id) == 43:
-        transaction_status = requests.get(
-            f"{ARWEAVE_API_BASEURL}/tx/{transaction_id}/status"
-        )
-        return {"transaction_status": json.loads(transaction_status.text)}
-    return {
-        "transaction_status": "Parameter issue. Please enter a valid transaction id."
-    }
+    transaction_status = requests.get(
+        f"{ARWEAVE_API_BASEURL}/tx/{transaction_id}/status"
+    )
+    try:
+        resp = json.loads(transaction_status.text)
+        if ERR_KEY in resp.keys() and len(resp.keys()) == 1:
+            return resp
+        return resp
+    except json.JSONDecodeError:
+        return {
+            ERR_KEY: f"{transaction_status.status_code} {transaction_status.reason}"
+        }
 
 
 async def _estimate_transaction_cost(size_in_bytes: str) -> dict:
@@ -202,13 +211,14 @@ async def _estimate_transaction_cost(size_in_bytes: str) -> dict:
     :return: The estimated cost of the transaction
     :rtype: JSON object
     """
-    if size_in_bytes.isdigit():
-        cost_estimate = requests.get(f"{ARWEAVE_API_BASEURL}/price/{size_in_bytes}/")
-        winstons = winston_to_ar(cost_estimate.text)
-        return {"estimate_transaction_cost": winstons}
-    return {
-        "estimate_transaction_cost": "please ensure that the number of bytes is entered as an integer"
-    }
+    cost_estimate = requests.get(f"{ARWEAVE_API_BASEURL}/price/{size_in_bytes}/")
+    if cost_estimate.status_code != 200:
+        try:
+            return json.loads(cost_estimate.text)
+        except json.JSONDecodeError:
+            return {ERR_KEY: f"{cost_estimate.status_code} {cost_estimate.reason}"}
+    winstons = winston_to_ar(cost_estimate.text)
+    return {"estimated_transaction_cost": winstons}
 
 
 def decode_base64_tag_fields(tags: list[str]) -> list[str]:
@@ -278,9 +288,8 @@ async def _fetch_tx_metadata(transaction_id: str) -> dict:
     try:
         data = json.loads(resp.text)
     except json.JSONDecodeError as err:
-        data[
-            "error"
-        ] = f"problem retrieving metadata please check Tx ID or try again shortly: '{err}'"
+        return {ERR_KEY: f"{resp.status_code} {resp.reason} ({err})"}
+    if ERR_KEY in data.keys() and len(data.keys()) == 1:
         return data
     # Humanize data size output for Arkly's end-users.
     data["data_size_bytes"] = data["data_size"]
@@ -316,6 +325,8 @@ async def _fetch_upload(transaction_id: str) -> FileResponse:
         fetch_dir = tmp_dir / Path(f"{transaction_id}.tar.gz")
         logger.info("Fetch writing to %s", fetch_dir)
         response = requests.get(url)
+        if response.status_code != 200:
+            return {"error": f"{response.status_code} {response.reason}"}
         with open(str(fetch_dir), "wb") as content:
             content.write(response.content)
         return FileResponse(str(fetch_dir))
@@ -384,13 +395,13 @@ async def _create_transaction(
         - Uploads the compressed tarball to Arweave for the current
           Arweave price.
     """
-    wallet = await create_temp_wallet(wallet)
-    if wallet == ERR_WALLET:
-        return {"transaction_id": "Error creating transaction."}
-    if wallet.balance <= 0:
-        return {"transaction_id": f"Error: wallet balance is: {wallet.balance}"}
+    wallet_obj, err = await create_temp_wallet(wallet)
+    if err is not None:
+        return {ERR_KEY: err}
+    if wallet_obj.balance <= 0:
+        return {ERR_KEY: f"wallet balance is: {wallet_obj.balance}"}
     if not files:
-        return {"transaction_id": "Error: no files selected for upload"}
+        return {ERR_KEY: "no files selected for upload"}
 
     tag_list = []
     try:
@@ -405,11 +416,11 @@ async def _create_transaction(
 
     logger.info("adding version to package: %s", tar_file_name)
     logger.info("new path exists: %s", tar_file_name.is_file())
-    logger.info("wallet balance before upload: %s", wallet.balance)
+    logger.info("wallet balance before upload: %s", wallet_obj.balance)
 
     with open(tar_file_name, "rb", buffering=0) as file_handler:
         new_transaction = Transaction(
-            wallet, file_handler=file_handler, file_path=tar_file_name
+            wallet_obj, file_handler=file_handler, file_path=tar_file_name
         )
         # Default tags for the tar/gzip file that we create.
         new_transaction.add_tag("Content-Type", "application/gzip")
@@ -427,12 +438,12 @@ async def _create_transaction(
     tx_status = new_transaction.get_status()
     logger.info("Transaction status: %s", tx_status)
     logger.info("Transaction ID: %s", new_transaction.id)
-    logger.info("New wallet balance: %s", wallet.balance)
+    logger.info("New wallet balance: %s", wallet_obj.balance)
     return {
         "transaction_id": f"{new_transaction.id}",
         "transaction_link": f"{ARWEAVE_VIEW_BASEURL}/tx/{new_transaction.id}",
         "transaction_status": f"{tx_status}",
-        "wallet_balance": f"{wallet.balance}",
+        "wallet_balance": f"{wallet_obj.balance}",
     }
 
 
