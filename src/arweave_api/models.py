@@ -4,7 +4,7 @@ import json
 import logging
 from typing import List
 
-from pydantic import BaseModel
+from pydantic import BaseModel, model_validator
 
 logger = logging.getLogger(__name__)
 
@@ -92,6 +92,7 @@ class Tags(BaseModel):
         # pylint: disable=C0202
         yield cls.validate_to_json
 
+    @model_validator(mode="before")
     @classmethod
     def validate_to_json(cls, value):
         """Parse the input parameters and return a Tags instance."""
