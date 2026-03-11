@@ -384,6 +384,7 @@ async def _create_transaction(
     files: List[UploadFile] = File(...),
     package_file_name: str = None,
     tags: Tags = None,
+    nopublish=False,
 ) -> dict:
     """Create an Arkly package and Arweave transaction.
 
@@ -431,6 +432,9 @@ async def _create_transaction(
 
         new_transaction.sign()
         uploader = get_uploader(new_transaction, file_handler)
+        if nopublish:
+            logger.info("not publishing to arkly")
+            return {"transaction_idd": "NOPUBLISH env var is set"}
         while not uploader.is_complete:
             uploader.upload_chunk()
 

@@ -3,6 +3,7 @@
 This module is an Arweave FastAPI server that allows users to
 communicate with Arweave, and put Arkly files on chain.
 """
+
 import logging
 from typing import Final, List
 
@@ -11,16 +12,17 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import RedirectResponse
 
 try:
+    import helpers
     import primary_functions
     from models import Tags
     from version import get_version
 except ModuleNotFoundError:
     try:
-        from src.arweave_api import primary_functions
+        from src.arweave_api import helpers, primary_functions
         from src.arweave_api.models import Tags
         from src.arweave_api.version import get_version
     except ModuleNotFoundError:
-        from arweave_api import primary_functions
+        from arweave_api import helpers, primary_functions
         from arweave_api.models import Tags
         from arweave_api.version import get_version
 
@@ -59,6 +61,7 @@ tags_metadata = [
     },
 ]
 
+
 app = FastAPI(
     title="api.arkly.io",
     description=API_DESCRIPTION,
@@ -69,7 +72,6 @@ app = FastAPI(
     openapi_tags=tags_metadata,
 )
 
-
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -77,6 +79,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+app.state.nopublish = helpers.get_nopublish()
 
 
 @app.get("/", include_in_schema=False)
@@ -198,7 +203,7 @@ async def create_transaction(
 ):
     """Create an Arkly package and Arweave transaction."""
     return await primary_functions._create_transaction(
-        wallet, files, package_file_name, tags
+        wallet, files, package_file_name, tags, app.state.nopublish
     )
 
 
