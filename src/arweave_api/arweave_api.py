@@ -9,9 +9,13 @@ import time
 import uvicorn
 
 try:
-    from src.arweave_api.version import get_version
+    from version import get_version
 except ModuleNotFoundError:
-    from arweave_api.version import get_version
+    try:
+        from src.arweave_api.version import get_version
+    except ModuleNotFoundError:
+        from arweave_api.version import get_version
+
 
 logging.basicConfig(
     format="%(asctime)-15s %(levelname)s :: %(filename)s:%(lineno)s:%(funcName)s() :: %(message)s",
