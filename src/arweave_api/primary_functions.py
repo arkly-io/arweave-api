@@ -26,13 +26,13 @@ from io import BytesIO
 from pathlib import Path
 from typing import Final, List, Tuple
 
-import arweave
+import ar as arweave
 import bagit
 import humanize
 import jose
 import requests
-from arweave.arweave_lib import Transaction
-from arweave.transaction_uploader import get_uploader
+from ar.transaction import Transaction
+from ar.utils.transaction_uploader import get_uploader
 from fastapi import File, HTTPException, Response, UploadFile, status
 from fastapi.responses import FileResponse
 
