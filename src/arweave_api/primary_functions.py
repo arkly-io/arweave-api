@@ -69,6 +69,8 @@ TX_ID_LEN: Final[int] = 43
 
 PACKAGING_AGENT_STRING = "Packaging-Agent"
 
+REQ_TIMEOUT: Final[int] = 30
+
 
 def _file_from_data(file_data):
     """Return a file-like BytesIO stream from Base64 encoded data."""
@@ -135,7 +137,8 @@ async def _check_last_transaction_post(wallet: UploadFile) -> dict:
     if err is not None:
         return {ERR_KEY: err}
     last_transaction = requests.get(
-        f"{ARWEAVE_API_BASEURL}/wallet/{wallet_obj.address}/last_tx"
+        f"{ARWEAVE_API_BASEURL}/wallet/{wallet_obj.address}/last_tx",
+        timeout=REQ_TIMEOUT,
     )
     return {
         "wallet_address": f"{wallet_obj.address}",
@@ -149,7 +152,10 @@ async def _check_balance_get(wallet_address: str) -> dict:
     """
     balance_url = f"{ARWEAVE_API_BASEURL}/wallet/{wallet_address}/balance"
     logger.info("requesting balance at: %s", balance_url)
-    resp = requests.get(balance_url)
+    resp = requests.get(
+        balance_url,
+        timeout=REQ_TIMEOUT,
+    )
     if resp.status_code != 200:
         return {ERR_KEY: f"{resp.status_code} {resp.reason}"}
     winstons = int(resp.text)
@@ -167,7 +173,10 @@ async def _check_last_transaction_get(wallet_address: str) -> dict:
     """
     tx_url = f"{ARWEAVE_API_BASEURL}/wallet/{wallet_address}/last_tx"
     logger.info("requesting last transaction at: %s", tx_url)
-    last_transaction = requests.get(tx_url)
+    last_transaction = requests.get(
+        tx_url,
+        timeout=REQ_TIMEOUT,
+    )
     return {
         "wallet_address": f"{wallet_address}",
         "last_transaction_id": f"{ARWEAVE_VIEW_BASEURL}/tx/{last_transaction.text}",
@@ -184,7 +193,8 @@ async def _check_transaction_status(transaction_id: int) -> dict:
     :rtype: JSON object
     """
     transaction_status = requests.get(
-        f"{ARWEAVE_API_BASEURL}/tx/{transaction_id}/status"
+        f"{ARWEAVE_API_BASEURL}/tx/{transaction_id}/status",
+        timeout=REQ_TIMEOUT,
     )
     try:
         resp = json.loads(transaction_status.text)
@@ -211,7 +221,10 @@ async def _estimate_transaction_cost(size_in_bytes: str) -> dict:
     :return: The estimated cost of the transaction
     :rtype: JSON object
     """
-    cost_estimate = requests.get(f"{ARWEAVE_API_BASEURL}/price/{size_in_bytes}/")
+    cost_estimate = requests.get(
+        f"{ARWEAVE_API_BASEURL}/price/{size_in_bytes}/",
+        timeout=REQ_TIMEOUT,
+    )
     if cost_estimate.status_code != 200:
         try:
             return json.loads(cost_estimate.text)
@@ -283,7 +296,10 @@ async def _fetch_tx_metadata(transaction_id: str) -> dict:
     required.
     """
     request_url = f"{ARWEAVE_API_BASEURL}/tx/{transaction_id}"
-    resp = requests.get(request_url, timeout=30)
+    resp = requests.get(
+        request_url,
+        timeout=REQ_TIMEOUT,
+    )
     data = {}
     try:
         data = json.loads(resp.text)
@@ -324,7 +340,10 @@ async def _fetch_upload(transaction_id: str) -> FileResponse:
         tmp_dir = tempfile.mkdtemp()
         fetch_dir = tmp_dir / Path(f"{transaction_id}.tar.gz")
         logger.info("Fetch writing to %s", fetch_dir)
-        response = requests.get(url)
+        response = requests.get(
+            url,
+            timeout=REQ_TIMEOUT,
+        )
         if response.status_code != 200:
             return {"error": f"{response.status_code} {response.reason}"}
         with open(str(fetch_dir), "wb") as content:
@@ -466,7 +485,11 @@ async def _validate_bag(transaction_id: str, response: Response) -> dict:
 
     # Setup retrieval of the data from the given transaction.
     transaction_url, arweave_url = _get_arweave_urls_from_tx(transaction_id)
-    arweave_response = requests.get(arweave_url, allow_redirects=True)
+    arweave_response = requests.get(
+        arweave_url,
+        allow_redirects=True,
+        timeout=REQ_TIMEOUT,
+    )
 
     # Create temp file to extract the contents from Arweave to.
     tmp_file_handle, tmp_file_path = tempfile.mkstemp()

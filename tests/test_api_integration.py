@@ -19,6 +19,9 @@ WALLET_NAME: Final[Path] = Path("myWallet.json")
 # normally always be Localhost.
 TESTING_BASE_URL: Final[str] = "http://127.0.0.1:8000"
 
+# Timeout as used in the main codebase.
+REQ_TIMEOUT: Final[int] = 30
+
 
 @pytest.fixture(name="mock_wallet")
 def create_wallet(tmp_path: PosixPath) -> PosixPath:
@@ -70,7 +73,11 @@ def test_check_balance(mock_wallet: PosixPath):
     ):
         with open(str(mock_wallet), "rb") as my_file:
             files = {"file": (str(WALLET_NAME), my_file)}
-            req = requests.post(url=f"{TESTING_BASE_URL}/check_balance/", files=files)
+            req = requests.post(
+                url=f"{TESTING_BASE_URL}/check_balance/",
+                files=files,
+                timeout=REQ_TIMEOUT,
+            )
             json_response = json.loads(req.text)
             assert isinstance(json_response["balance"], float)
 
@@ -87,7 +94,9 @@ def test_check_balance_form(mock_wallet: PosixPath):
                 "wallet": encoded_wallet.decode("utf-8"),
             }
             req = requests.post(
-                url=f"{TESTING_BASE_URL}/check_balance_form/", data=data
+                url=f"{TESTING_BASE_URL}/check_balance_form/",
+                data=data,
+                timeout=REQ_TIMEOUT,
             )
             json_response = json.loads(req.text)
             assert isinstance(json_response["balance"], float)
@@ -102,7 +111,9 @@ def test_check_last_transaction(mock_wallet: PosixPath):
         with open(str(mock_wallet), "rb") as my_file:
             files = {"file": (str(WALLET_NAME), my_file)}
             req = requests.post(
-                url=f"{TESTING_BASE_URL}/check_last_transaction/", files=files
+                url=f"{TESTING_BASE_URL}/check_last_transaction/",
+                files=files,
+                timeout=REQ_TIMEOUT,
             )
             json_response = json.loads(req.text)
             assert json_response["last_transaction_id"] != "Failure to get response..."
@@ -117,7 +128,9 @@ def test_estimate_transaction_cost():
     ):
         data = {"size_in_bytes": "10000000000"}
         req = requests.get(
-            url=f"{TESTING_BASE_URL}/estimate_transaction_cost/", params=data
+            url=f"{TESTING_BASE_URL}/estimate_transaction_cost/",
+            params=data,
+            timeout=REQ_TIMEOUT,
         )
         # self.assertNotEqual(req.text, None)
         json_response = json.loads(req.text)
@@ -135,7 +148,9 @@ def test_check_transaction_status():
     ):
         data = {"transaction_id": "cZiaojZtzyL1ZB7GjbWLbj62S_9pxPDHu61HQvSYgD0"}
         req = requests.get(
-            url=f"{TESTING_BASE_URL}/check_transaction_status/", params=data
+            url=f"{TESTING_BASE_URL}/check_transaction_status/",
+            params=data,
+            timeout=REQ_TIMEOUT,
         )
         json_response = json.loads(req.text)
         assert (
@@ -153,7 +168,11 @@ def test_fetch_upload():
         str(VCR_FIXTURES_PATH / Path("test_fetch_upload.yaml"))
     ):
         data = {"transaction_id": "cZiaojZtzyL1ZB7GjbWLbj62S_9pxPDHu61HQvSYgD0"}
-        req = requests.get(url=f"{TESTING_BASE_URL}/fetch_upload/", params=data)
+        req = requests.get(
+            url=f"{TESTING_BASE_URL}/fetch_upload/",
+            params=data,
+            timeout=REQ_TIMEOUT,
+        )
         assert req.text is not None
         assert req.headers.get("content-type") == "application/x-tar"
 
@@ -171,7 +190,9 @@ def test_create_transaction(arkly_test_file: PosixPath, mock_wallet: PosixPath):
                     ("files", sample_file),
                 ]
                 req = requests.post(
-                    url=f"{TESTING_BASE_URL}/create_transaction/", files=files
+                    url=f"{TESTING_BASE_URL}/create_transaction/",
+                    files=files,
+                    timeout=REQ_TIMEOUT,
                 )
                 assert req.text is not None
                 for item in (
@@ -217,6 +238,7 @@ def test_create_transaction_form(arkly_test_file: PosixPath, mock_wallet: PosixP
                 req = requests.post(
                     url=f"{TESTING_BASE_URL}/create_transaction_form/",
                     json=data,
+                    timeout=REQ_TIMEOUT,
                 )
                 assert req.text is not None
                 for item in (
@@ -235,7 +257,11 @@ def test_validate_bag_valid_bag():
         str(VCR_FIXTURES_PATH / Path("test_validate_arweave_bag_valid_bag.yaml"))
     ):
         data = {"transaction_id": "4vRsZM1JR491HJFPm_Nx08a7kp1_dJrc_sZC1X6afbg"}
-        req = requests.get(url=f"{TESTING_BASE_URL}/validate_arweave_bag/", params=data)
+        req = requests.get(
+            url=f"{TESTING_BASE_URL}/validate_arweave_bag/",
+            params=data,
+            timeout=REQ_TIMEOUT,
+        )
         for item in ("transaction_url", "file_url", "valid", "bag_info"):
             assert item in req.text
 
@@ -247,7 +273,11 @@ def test_validate_bag_invalid_bag():
         str(VCR_FIXTURES_PATH / Path("test_validate_arweave_bag_invalid_bag.yaml"))
     ):
         data = {"transaction_id": "8zItHEd6sUbK8fop6KquIu6jEyu49kLgiZ73O7xu2OE"}
-        req = requests.get(url=f"{TESTING_BASE_URL}/validate_arweave_bag/", params=data)
+        req = requests.get(
+            url=f"{TESTING_BASE_URL}/validate_arweave_bag/",
+            params=data,
+            timeout=REQ_TIMEOUT,
+        )
         for item in ("transaction_url", "file_url", "valid"):
             assert item in req.text
         assert json.loads(req.text)["valid"] == "UNKNOWN"
