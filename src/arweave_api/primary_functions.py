@@ -31,30 +31,28 @@ import bagit
 import humanize
 import jose
 import requests
-from arweave.arweave_lib import Transaction, arql
+from arweave.arweave_lib import Transaction
 from arweave.transaction_uploader import get_uploader
 from fastapi import File, HTTPException, Response, UploadFile, status
 from fastapi.responses import FileResponse
 
 try:
-    from arweave_utilities import ar_to_winston, winston_to_ar
+    import arweave_utilities
     from models import Tags
     from version import get_version
 except ModuleNotFoundError:
     try:
-        from src.arweave_api.arweave_utilities import ar_to_winston, winston_to_ar
+        from src.arweave_api import arweave_utilities
         from src.arweave_api.models import Tags
         from src.arweave_api.version import get_version
     except ModuleNotFoundError:
-        from arweave_api.arweave_utilities import ar_to_winston, winston_to_ar
+        from arweave_api import arweave_utilities
         from arweave_api.models import Tags
         from arweave_api.version import get_version
 
 logger = logging.getLogger(__name__)
 
-ARWEAVE_API_BASEURL: Final[str] = "https://arweave.net"
-ARWEAVE_VIEW_BASEURL: Final[str] = "https://arweave.app"
-
+# User agent string for Arkly.
 ARKLY_AGENT = f"api.arkly.io/{get_version()}"
 
 # NB. Legacy code, we need to replace with different error handling.
@@ -121,7 +119,7 @@ async def _check_balance_post(wallet: UploadFile) -> dict:
     if err is not None:
         return {ERR_KEY: err}
     arweave_ar = wallet_obj.balance
-    winstons = ar_to_winston(arweave_ar)
+    winstons = arweave_utilities.ar_to_winston(arweave_ar)
     return {
         "wallet_address": wallet_obj.address,
         "ar": arweave_ar,
@@ -133,16 +131,17 @@ async def _check_last_transaction_post(wallet: UploadFile) -> dict:
     """Allows a user to check the transaction id of their last
     transaction.
     """
+    gateway = arweave_utilities.retrieve_gateway()
     wallet_obj, err = await create_temp_wallet(wallet)
     if err is not None:
         return {ERR_KEY: err}
     last_transaction = requests.get(
-        f"{ARWEAVE_API_BASEURL}/wallet/{wallet_obj.address}/last_tx",
+        f"{gateway}/wallet/{wallet_obj.address}/last_tx",
         timeout=REQ_TIMEOUT,
     )
     return {
         "wallet_address": f"{wallet_obj.address}",
-        "last_transaction_id": f"{ARWEAVE_VIEW_BASEURL}/tx/{last_transaction.text}",
+        "last_transaction_id": f"{gateway}/tx/{last_transaction.text}",
     }
 
 
@@ -150,7 +149,8 @@ async def _check_balance_get(wallet_address: str) -> dict:
     """Allows a user to check the balance of a given wallet address
     without loading a wallet into memory.
     """
-    balance_url = f"{ARWEAVE_API_BASEURL}/wallet/{wallet_address}/balance"
+    gateway = arweave_utilities.retrieve_gateway()
+    balance_url = f"{gateway}/wallet/{wallet_address}/balance"
     logger.info("requesting balance at: %s", balance_url)
     resp = requests.get(
         balance_url,
@@ -159,7 +159,7 @@ async def _check_balance_get(wallet_address: str) -> dict:
     if resp.status_code != 200:
         return {ERR_KEY: f"{resp.status_code} {resp.reason}"}
     winstons = int(resp.text)
-    arweave_ar = winston_to_ar(resp.text)
+    arweave_ar = arweave_utilities.winston_to_ar(resp.text)
     return {
         "wallet_address": wallet_address,
         "ar": arweave_ar,
@@ -171,7 +171,8 @@ async def _check_last_transaction_get(wallet_address: str) -> dict:
     """Allows a user to check the last transaction of a wallet without
     having to load a wallet into memory.
     """
-    tx_url = f"{ARWEAVE_API_BASEURL}/wallet/{wallet_address}/last_tx"
+    gateway = arweave_utilities.retrieve_gateway()
+    tx_url = f"{gateway}/wallet/{wallet_address}/last_tx"
     logger.info("requesting last transaction at: %s", tx_url)
     last_transaction = requests.get(
         tx_url,
@@ -179,7 +180,7 @@ async def _check_last_transaction_get(wallet_address: str) -> dict:
     )
     return {
         "wallet_address": f"{wallet_address}",
-        "last_transaction_id": f"{ARWEAVE_VIEW_BASEURL}/tx/{last_transaction.text}",
+        "last_transaction_id": f"{gateway}/tx/{last_transaction.text}",
     }
 
 
@@ -192,8 +193,9 @@ async def _check_transaction_status(transaction_id: int) -> dict:
     :return: The transaction id as a JSON object
     :rtype: JSON object
     """
+    gateway = arweave_utilities.retrieve_gateway()
     transaction_status = requests.get(
-        f"{ARWEAVE_API_BASEURL}/tx/{transaction_id}/status",
+        f"{gateway}/tx/{transaction_id}/status",
         timeout=REQ_TIMEOUT,
     )
     try:
@@ -221,8 +223,9 @@ async def _estimate_transaction_cost(size_in_bytes: str) -> dict:
     :return: The estimated cost of the transaction
     :rtype: JSON object
     """
+    gateway = arweave_utilities.retrieve_gateway()
     cost_estimate = requests.get(
-        f"{ARWEAVE_API_BASEURL}/price/{size_in_bytes}/",
+        f"{gateway}/price/{size_in_bytes}/",
         timeout=REQ_TIMEOUT,
     )
     if cost_estimate.status_code != 200:
@@ -230,7 +233,7 @@ async def _estimate_transaction_cost(size_in_bytes: str) -> dict:
             return json.loads(cost_estimate.text)
         except json.JSONDecodeError:
             return {ERR_KEY: f"{cost_estimate.status_code} {cost_estimate.reason}"}
-    winstons = winston_to_ar(cost_estimate.text)
+    winstons = arweave_utilities.winston_to_ar(cost_estimate.text)
     return {"estimated_transaction_cost": winstons}
 
 
@@ -295,7 +298,8 @@ async def _fetch_tx_metadata(transaction_id: str) -> dict:
     return a subset of this for ease of use. It can be expanded in future as
     required.
     """
-    request_url = f"{ARWEAVE_API_BASEURL}/tx/{transaction_id}"
+    gateway = arweave_utilities.retrieve_gateway()
+    request_url = f"{gateway}/tx/{transaction_id}"
     resp = requests.get(
         request_url,
         timeout=REQ_TIMEOUT,
@@ -319,7 +323,7 @@ async def _fetch_tx_metadata(transaction_id: str) -> dict:
 
     # Humanize reward output for Arkly's end-users.
     data["reward_winston"] = int(data["reward"])
-    data["reward_ar"] = winston_to_ar(data["reward"])
+    data["reward_ar"] = arweave_utilities.winston_to_ar(data["reward"])
     data.pop("reward")
     return data
 
@@ -333,7 +337,8 @@ async def _fetch_upload(transaction_id: str) -> FileResponse:
     :return: The compressed file upload
     :rtype: File Object
     """
-    url = f"{ARWEAVE_API_BASEURL}/{transaction_id}"
+    gateway = arweave_utilities.retrieve_gateway()
+    url = f"{gateway}/{transaction_id}"
     try:
         # Create a temporary directory for our fetch data. mkdtemp does
         # this in the most secure way possible.
@@ -437,14 +442,15 @@ async def _create_transaction(
     logger.info("adding version to package: %s", tar_file_name)
     logger.info("new path exists: %s", tar_file_name.is_file())
     logger.info("wallet balance before upload: %s", wallet_obj.balance)
-
+    gateway = arweave_utilities.retrieve_gateway()
     with open(tar_file_name, "rb", buffering=0) as file_handler:
         new_transaction = Transaction(
             wallet_obj, file_handler=file_handler, file_path=tar_file_name
         )
+        # Set the gateway to our custom endpoint.
+        new_transaction.api_url = gateway
         # Default tags for the tar/gzip file that we create.
         new_transaction.add_tag("Content-Type", "application/gzip")
-
         for tag in tag_list:
             logger.info("Adding tag: %s: %s", tag.name, tag.value)
             new_transaction.add_tag(tag.name, tag.value)
@@ -462,9 +468,10 @@ async def _create_transaction(
     logger.info("Transaction status: %s", tx_status)
     logger.info("Transaction ID: %s", new_transaction.id)
     logger.info("New wallet balance: %s", wallet_obj.balance)
+    gateway = arweave_utilities.retrieve_gateway()
     return {
         "transaction_id": f"{new_transaction.id}",
-        "transaction_link": f"{ARWEAVE_VIEW_BASEURL}/tx/{new_transaction.id}",
+        "transaction_link": f"{gateway}/tx/{new_transaction.id}",
         "transaction_status": f"{tx_status}",
         "wallet_balance": f"{wallet_obj.balance}",
     }
@@ -474,9 +481,10 @@ def _get_arweave_urls_from_tx(transaction_id: str) -> dict:
     """Return a transaction URL and Arweave URL from a given Arweave
     transaction ID.
     """
+    gateway = arweave_utilities.retrieve_gateway()
     return (
-        f"{ARWEAVE_VIEW_BASEURL}/tx/{transaction_id}",
-        f"{ARWEAVE_API_BASEURL}/{transaction_id}",
+        f"{gateway}/tx/{transaction_id}",
+        f"{gateway}/{transaction_id}",
     )
 
 
@@ -536,42 +544,6 @@ async def _validate_bag(transaction_id: str, response: Response) -> dict:
             "file_url": arweave_url,
             "valid": "UNKNOWN",
         }
-
-
-async def _all_transactions(wallet_addr: str):
-    """Retrieve all transactions from a given wallet and return a human
-    friendly link to enable users to view the transaction.
-    """
-    query = {"op": "equals", "expr1": "from", "expr2": f"{wallet_addr}"}
-    tx_ids = arql(None, query)
-    if not tx_ids:
-        return {
-            "wallet_address": f"{wallet_addr}",
-            "total_transactions": len(tx_ids),
-            "arweave_transactions": tx_ids,
-        }
-    tx_uris = [f"{ARWEAVE_VIEW_BASEURL}/tx/{tx}" for tx in tx_ids]
-    return {
-        "wallet_address": f"{wallet_addr}",
-        "total_transactions": len(tx_uris),
-        "arweave_transactions": tx_uris,
-    }
-
-
-async def _retrieve_by_tag_pair(name: str, value: str) -> dict:
-    """Retrieve all transactions with a given tag-pair."""
-    query = {"op": "equals", "expr1": f"{name}", "expr2": f"{value}"}
-    tx_ids = arql(None, query)
-    if not tx_ids:
-        return {
-            "total_transactions": 0,
-            "arweave_transactions": [],
-        }
-    tx_uris = [f"{ARWEAVE_VIEW_BASEURL}/tx/{tx}" for tx in tx_ids]
-    return {
-        "tag_pair": {"name": f"{name}", "value": f"{value}"},
-        "arweave_transactions": tx_uris,
-    }
 
 
 async def _get_version_info() -> dict:

@@ -36,7 +36,6 @@ API_DESCRIPTION: Final[str] = " "
 # OpenAPI tags delineating the documentation.
 TAG_ARWEAVE: Final[str] = "arweave"
 TAG_ARWEAVE_WALLET: Final[str] = "arweave wallet"
-TAG_ARWEAVE_SEARCH: Final[str] = "arweave search"
 TAG_ARKLY: Final[str] = "arkly"
 TAG_MAINTAIN: Final[str] = "maintenance"
 
@@ -50,10 +49,6 @@ tags_metadata = [
     {
         "name": TAG_ARWEAVE_WALLET,
         "description": "Manage Arweave wallets",
-    },
-    {
-        "name": TAG_ARWEAVE_SEARCH,
-        "description": "Search for Arweave transactions",
     },
     {
         "name": TAG_ARKLY,
@@ -172,26 +167,6 @@ async def fetch_transaction_metadata(transaction_id: str):
     Example Tx: `rYa3ILXqWi_V52xPoG70y2EupPsTtu4MsMmz6DI4fy4`
     """
     return await primary_functions._fetch_tx_metadata(transaction_id)
-
-
-@app.get("/all_wallet_transactions/", tags=[TAG_ARWEAVE_SEARCH])
-async def get_all_wallet_transactions(wallet_addr: str):
-    """Allows a user to see a list of all transactions with a given
-    wallet.
-
-    Example wallet: `6KymaAPWd3JNyMT0B7EPYij4TWxehhMrzRD8qifCSLs`
-    """
-    return await primary_functions._all_transactions(wallet_addr)
-
-
-@app.get("/transactions_by_tag_pair/", tags=[TAG_ARWEAVE_SEARCH])
-async def get_transactions_by_tag_pair(name: str, value: str):
-    """Allows a user to retrieve transactions by tag-pair.
-
-    Example tag key: `x-tag`
-    Example tag value: `arkly hello world!`
-    """
-    return await primary_functions._retrieve_by_tag_pair(name, value)
 
 
 @app.post("/create_transaction/", tags=[TAG_ARKLY])
