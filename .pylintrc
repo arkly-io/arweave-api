@@ -37,6 +37,8 @@ ignore-paths=
     .vscode/.,
     Makefile,
     justfile,
+    .codespellignore,
+    .ruff.toml,
 
 [MESSAGES CONTROL]
 
