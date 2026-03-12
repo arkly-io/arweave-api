@@ -1,15 +1,17 @@
 # Arweave API
 
+<!--markdownlint-disable MD026 -->
+
 This API allows users to upload their files permanently onto Arweave.
 
-# Table of contents
+## Table of contents
 
-- [Arweave API](#arweave-api)
-  - [Install from package :package:](#install-from-package-package)
-  - [Install for development :star:](#install-for-development-star)
-  - [Usage :computer:](#usage-computer)
-  - [Testing :gear:](#testing-gear)
-  - [Endpoint documentation :scroll:](#endpoint-documentation-scroll)
+* [Arweave API](#arweave-api)
+  * [Install from package :package:](#install-from-package-package)
+  * [Install for development :star:](#install-for-development-star)
+  * [Usage :computer:](#usage-computer)
+  * [Testing :gear:](#testing-gear)
+  * [Endpoint documentation :scroll:](#endpoint-documentation-scroll)
 
 ## Install from package :package:
 
@@ -90,8 +92,8 @@ Documentation for the API endpoints comes in two variants:
 
 ### OpenAPI (Swagger): Interactive API docs
 
-* http://127.0.0.1:8000/docs/
+* Default: [http://127.0.0.1:8000/docs/](http://127.0.0.1:8000/docs/)
 
 ### Redoc: Alternative API docs
 
-* http://127.0.0.1:8000/redoc/
+* Default: [http://127.0.0.1:8000/redoc/](http://127.0.0.1:8000/redoc/)
