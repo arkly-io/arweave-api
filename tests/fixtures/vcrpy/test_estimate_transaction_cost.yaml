@@ -9,19 +9,19 @@ interactions:
       Connection:
       - keep-alive
       User-Agent:
-      - python-requests/2.28.1
+      - python-requests/2.32.5
     method: GET
-    uri: http://127.0.0.1:8000/estimate_transaction_cost/?size_in_bytes=10000000000
+    uri: http://0.0.0.0:8000/estimate_transaction_cost/?size_in_bytes=10000000000
   response:
     body:
-      string: '{"estimate_transaction_cost":"1.968002042390"}'
+      string: '{"estimated_transaction_cost":36.95489812834}'
     headers:
       content-length:
-      - '46'
+      - '45'
       content-type:
       - application/json
       date:
-      - Wed, 21 Sep 2022 11:48:48 GMT
+      - Fri, 13 Mar 2026 14:13:51 GMT
       server:
       - uvicorn
     status:

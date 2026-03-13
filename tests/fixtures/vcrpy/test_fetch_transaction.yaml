@@ -9,9 +9,9 @@ interactions:
       Connection:
       - keep-alive
       User-Agent:
-      - python-requests/2.28.1
+      - python-requests/2.32.5
     method: GET
-    uri: http://127.0.0.1:8000/fetch_upload/?transaction_id=cZiaojZtzyL1ZB7GjbWLbj62S_9pxPDHu61HQvSYgD0
+    uri: http://0.0.0.0:8000/fetch_transaction/?transaction_id=cZiaojZtzyL1ZB7GjbWLbj62S_9pxPDHu61HQvSYgD0
   response:
     body:
       string: !!binary |
@@ -1156,16 +1156,18 @@ interactions:
         4zzzj5MH43+VOzt7HVv7fxQ7Vobf6YAjJRWQEoT4gz/4gz/4gz/4gz/4gz/4gz/4gz/4gz/4gz/4
         gz/4gz/4gz/4gz+AgPh/AI2QZ64AQAEA
     headers:
+      accept-ranges:
+      - bytes
       content-length:
       - '64947'
       content-type:
       - application/x-tar
       date:
-      - Wed, 21 Sep 2022 12:24:20 GMT
+      - Fri, 13 Mar 2026 12:15:02 GMT
       etag:
-      - e4dfc0f53ab9ad7675d2309455f0717d
+      - '"19295c952287cf6aa22a89af0c692e57"'
       last-modified:
-      - Wed, 21 Sep 2022 12:24:21 GMT
+      - Fri, 13 Mar 2026 12:15:07 GMT
       server:
       - uvicorn
     status:

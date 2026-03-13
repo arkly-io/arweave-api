@@ -1,6 +1,5 @@
 """Arkly Arweave API integration tests"""
 
-import base64
 import json
 from pathlib import Path, PosixPath
 from typing import Final
@@ -17,7 +16,7 @@ WALLET_NAME: Final[Path] = Path("myWallet.json")
 
 # If desired this can be changed to the remote server, but it should
 # normally always be Localhost.
-TESTING_BASE_URL: Final[str] = "http://127.0.0.1:8000"
+TESTING_BASE_URL: Final[str] = "http://0.0.0.0:8000"
 
 # Timeout as used in the main codebase.
 REQ_TIMEOUT: Final[int] = 30
@@ -72,34 +71,14 @@ def test_check_balance(mock_wallet: PosixPath):
         str(VCR_FIXTURES_PATH / Path("test_check_balance.yaml"))
     ):
         with open(str(mock_wallet), "rb") as my_file:
-            files = {"file": (str(WALLET_NAME), my_file)}
-            req = requests.post(
-                url=f"{TESTING_BASE_URL}/check_balance/",
+            files = {"wallet": (str(WALLET_NAME), my_file)}
+            resp = requests.post(
+                url=f"{TESTING_BASE_URL}/check_wallet_balance/",
                 files=files,
                 timeout=REQ_TIMEOUT,
             )
-            json_response = json.loads(req.text)
-            assert isinstance(json_response["balance"], float)
-
-
-def test_check_balance_form(mock_wallet: PosixPath):
-    """Testing the check_balance endpoint"""
-    arweave_vcr = vcr.VCR(before_record_request=_scrub_wallet_data())
-    with arweave_vcr.use_cassette(
-        str(VCR_FIXTURES_PATH / Path("test_check_balance_form.yaml"))
-    ):
-        with open(str(mock_wallet), "rb") as my_wallet:
-            encoded_wallet = base64.b64encode(my_wallet.read())
-            data = {
-                "wallet": encoded_wallet.decode("utf-8"),
-            }
-            req = requests.post(
-                url=f"{TESTING_BASE_URL}/check_balance_form/",
-                data=data,
-                timeout=REQ_TIMEOUT,
-            )
-            json_response = json.loads(req.text)
-            assert isinstance(json_response["balance"], float)
+            json_response = json.loads(resp.text)
+            assert isinstance(json_response["ar"], float)
 
 
 def test_check_last_transaction(mock_wallet: PosixPath):
@@ -109,14 +88,20 @@ def test_check_last_transaction(mock_wallet: PosixPath):
         str(VCR_FIXTURES_PATH / Path("test_check_last_transaction.yaml"))
     ):
         with open(str(mock_wallet), "rb") as my_file:
-            files = {"file": (str(WALLET_NAME), my_file)}
-            req = requests.post(
-                url=f"{TESTING_BASE_URL}/check_last_transaction/",
+            files = {"wallet": (str(WALLET_NAME), my_file)}
+            resp = requests.post(
+                url=f"{TESTING_BASE_URL}/check_wallet_last_transaction/",
                 files=files,
                 timeout=REQ_TIMEOUT,
             )
-            json_response = json.loads(req.text)
+            assert resp.status_code == 200
+            json_response = json.loads(resp.text)
             assert json_response["last_transaction_id"] != "Failure to get response..."
+            for item in [
+                "wallet_address",
+                "last_transaction_id",
+            ]:
+                assert item in json_response.keys()
 
 
 def test_estimate_transaction_cost():
@@ -127,17 +112,13 @@ def test_estimate_transaction_cost():
         str(VCR_FIXTURES_PATH / Path("test_estimate_transaction_cost.yaml"))
     ):
         data = {"size_in_bytes": "10000000000"}
-        req = requests.get(
+        resp = requests.get(
             url=f"{TESTING_BASE_URL}/estimate_transaction_cost/",
             params=data,
             timeout=REQ_TIMEOUT,
         )
-        # self.assertNotEqual(req.text, None)
-        json_response = json.loads(req.text)
-        assert (
-            json_response["estimate_transaction_cost"]
-            != "Parameter issue. Please enter a valid amount of bytes as an integer."
-        )
+        json_response = json.loads(resp.text)
+        assert isinstance(json_response["estimated_transaction_cost"], float)
 
 
 def test_check_transaction_status():
@@ -146,35 +127,36 @@ def test_check_transaction_status():
     with arweave_vcr.use_cassette(
         str(VCR_FIXTURES_PATH / Path("test_check_transaction_status.yaml"))
     ):
-        data = {"transaction_id": "cZiaojZtzyL1ZB7GjbWLbj62S_9pxPDHu61HQvSYgD0"}
-        req = requests.get(
-            url=f"{TESTING_BASE_URL}/check_transaction_status/",
-            params=data,
+        tx_id = "cZiaojZtzyL1ZB7GjbWLbj62S_9pxPDHu61HQvSYgD0"
+        resp = requests.get(
+            url=f"{TESTING_BASE_URL}/check_transaction_status/?transaction_id={tx_id}",
             timeout=REQ_TIMEOUT,
         )
-        json_response = json.loads(req.text)
-        assert (
-            json_response["transaction_status"]
-            != "Parameter issue. Please enter a valid transaction id."
-        )
-        for item in ("block_height", "block_indep_hash", "number_of_confirmations"):
-            assert item in json_response["transaction_status"]
+        json_response = json.loads(resp.text)
+        # Modify variable aspects of the response. If they don't exist
+        # will throw an error, correctly.
+        json_response["block_height"] = 0
+        json_response["number_of_confirmations"] = 0
+        assert json_response == {
+            "block_height": 0,
+            "block_indep_hash": "dY4cRXBnrH3bhqEZnhqpveywsx5kFqrinysBcXc1OO2wx7Ys74_6rS2P2yRvdI7s",
+            "number_of_confirmations": 0,
+        }
 
 
-def test_fetch_upload():
+def test_fetch_transaction():
     """Testing the fetch_upload route"""
     arweave_vcr = vcr.VCR(before_record_request=_scrub_wallet_data())
     with arweave_vcr.use_cassette(
-        str(VCR_FIXTURES_PATH / Path("test_fetch_upload.yaml"))
+        str(VCR_FIXTURES_PATH / Path("test_fetch_transaction.yaml"))
     ):
-        data = {"transaction_id": "cZiaojZtzyL1ZB7GjbWLbj62S_9pxPDHu61HQvSYgD0"}
-        req = requests.get(
-            url=f"{TESTING_BASE_URL}/fetch_upload/",
-            params=data,
+        tx_id = "cZiaojZtzyL1ZB7GjbWLbj62S_9pxPDHu61HQvSYgD0"
+        resp = requests.get(
+            url=f"{TESTING_BASE_URL}/fetch_transaction/?transaction_id={tx_id}",
             timeout=REQ_TIMEOUT,
         )
-        assert req.text is not None
-        assert req.headers.get("content-type") == "application/x-tar"
+        assert resp.text is not None
+        assert resp.headers.get("content-type") == "application/x-tar"
 
 
 def test_create_transaction(arkly_test_file: PosixPath, mock_wallet: PosixPath):
@@ -186,68 +168,24 @@ def test_create_transaction(arkly_test_file: PosixPath, mock_wallet: PosixPath):
         with open(str(mock_wallet), "rb") as my_wallet:
             with open(str(arkly_test_file), "rb") as sample_file:
                 files = [
-                    ("files", my_wallet),
+                    ("wallet", my_wallet),
                     ("files", sample_file),
+                    {"tags", ""},
                 ]
-                req = requests.post(
-                    url=f"{TESTING_BASE_URL}/create_transaction/",
+                resp = requests.post(
+                    url=f"{TESTING_BASE_URL}/create_transaction/?package_file_name=test_upload",
                     files=files,
                     timeout=REQ_TIMEOUT,
                 )
-                assert req.text is not None
+                assert resp.status_code == 200
+                assert resp.text is not None
                 for item in (
                     "transaction_id",
                     "transaction_link",
                     "transaction_status",
                     "wallet_balance",
                 ):
-                    assert item in req.text
-
-
-def test_create_transaction_form(arkly_test_file: PosixPath, mock_wallet: PosixPath):
-    """Testing out the create_transaction endpoint"""
-    arweave_vcr = vcr.VCR(before_record_request=_scrub_wallet_data())
-    with arweave_vcr.use_cassette(
-        str(VCR_FIXTURES_PATH / Path("test_create_transaction_form.yaml"))
-    ):
-        with open(str(mock_wallet), "rb") as my_wallet:
-            with open(str(arkly_test_file), "rb") as sample_file:
-                arweave_files = []
-                encoded_file_1 = base64.b64encode(sample_file.read())
-                encoded_wallet = base64.b64encode(my_wallet.read())
-                arweave_files.append(
-                    {
-                        "FileName": "test_file_one.txt",
-                        "Base64File": encoded_file_1.decode("utf-8"),
-                    }
-                )
-
-                # Reset file_stream to zero to read again.
-                sample_file.seek(0)
-                encoded_file_2 = base64.b64encode(sample_file.read())
-                arweave_files.append(
-                    {
-                        "FileName": "test_file_two.txt",
-                        "Base64File": encoded_file_2.decode("utf-8"),
-                    }
-                )
-                data = {
-                    "ArweaveKey": encoded_wallet.decode("utf-8"),
-                    "ArweaveFiles": arweave_files,
-                }
-                req = requests.post(
-                    url=f"{TESTING_BASE_URL}/create_transaction_form/",
-                    json=data,
-                    timeout=REQ_TIMEOUT,
-                )
-                assert req.text is not None
-                for item in (
-                    "transaction_id",
-                    "transaction_link",
-                    "transaction_status",
-                    "wallet_balance",
-                ):
-                    assert item in req.text
+                    assert item in resp.text
 
 
 def test_validate_bag_valid_bag():
@@ -257,13 +195,13 @@ def test_validate_bag_valid_bag():
         str(VCR_FIXTURES_PATH / Path("test_validate_arweave_bag_valid_bag.yaml"))
     ):
         data = {"transaction_id": "4vRsZM1JR491HJFPm_Nx08a7kp1_dJrc_sZC1X6afbg"}
-        req = requests.get(
-            url=f"{TESTING_BASE_URL}/validate_arweave_bag/",
+        resp = requests.get(
+            url=f"{TESTING_BASE_URL}/validate_arkly_bag/",
             params=data,
             timeout=REQ_TIMEOUT,
         )
         for item in ("transaction_url", "file_url", "valid", "bag_info"):
-            assert item in req.text
+            assert item in resp.text
 
 
 def test_validate_bag_invalid_bag():
@@ -273,11 +211,11 @@ def test_validate_bag_invalid_bag():
         str(VCR_FIXTURES_PATH / Path("test_validate_arweave_bag_invalid_bag.yaml"))
     ):
         data = {"transaction_id": "8zItHEd6sUbK8fop6KquIu6jEyu49kLgiZ73O7xu2OE"}
-        req = requests.get(
-            url=f"{TESTING_BASE_URL}/validate_arweave_bag/",
+        resp = requests.get(
+            url=f"{TESTING_BASE_URL}/validate_arkly_bag/",
             params=data,
             timeout=REQ_TIMEOUT,
         )
         for item in ("transaction_url", "file_url", "valid"):
-            assert item in req.text
-        assert json.loads(req.text)["valid"] == "UNKNOWN"
+            assert item in resp.text
+        assert json.loads(resp.text)["valid"] == "UNKNOWN"

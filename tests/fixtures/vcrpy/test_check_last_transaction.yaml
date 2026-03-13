@@ -9,23 +9,23 @@ interactions:
       Connection:
       - keep-alive
       Content-Length:
-      - '3339'
+      - '3305'
       Content-Type:
-      - multipart/form-data; boundary=a58d7a2f0b23b10616e10c5aea0ba87c
+      - multipart/form-data; boundary=89f711aa79c817654425cc71a78ecfd0
       User-Agent:
-      - python-requests/2.28.1
+      - python-requests/2.32.5
     method: POST
-    uri: http://127.0.0.1:8000/check_last_transaction/
+    uri: http://0.0.0.0:8000/check_wallet_last_transaction/
   response:
     body:
-      string: '{"last_transaction_id":"HuymwM4PaqZmhytJgZiYcctvDkg14oz5DLRChYkGTcM"}'
+      string: '{"wallet_address":"6KymaAPWd3JNyMT0B7EPYij4TWxehhMrzRD8qifCSLs","last_transaction_id":"https://permagate.io/tx/01KR3Ml3YEGT5mPWZXmYxhlyEr9d-iTlSMWco43BL3Q"}'
     headers:
       content-length:
-      - '69'
+      - '156'
       content-type:
       - application/json
       date:
-      - Tue, 20 Sep 2022 17:03:01 GMT
+      - Fri, 13 Mar 2026 14:04:18 GMT
       server:
       - uvicorn
     status:

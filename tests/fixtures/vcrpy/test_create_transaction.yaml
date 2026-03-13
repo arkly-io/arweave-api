@@ -9,23 +9,23 @@ interactions:
       Connection:
       - keep-alive
       Content-Length:
-      - '3470'
+      - '3532'
       Content-Type:
-      - multipart/form-data; boundary=0c024d8a891c138875702237e9a81494
+      - multipart/form-data; boundary=68732eea8f316c58cb8aaa8f4c1faeaf
       User-Agent:
-      - python-requests/2.28.1
+      - python-requests/2.32.5
     method: POST
-    uri: http://127.0.0.1:8000/create_transaction/
+    uri: http://0.0.0.0:8000/create_transaction/?package_file_name=test_upload
   response:
     body:
-      string: '{"transaction_id":"Cm-4Qf69y8Zpiml-U5N7zt_DI-LfxtuIoE1YHSwIknw","transaction_link":"https://viewblock.io/arweave/tx/Cm-4Qf69y8Zpiml-U5N7zt_DI-LfxtuIoE1YHSwIknw","transaction_status":"PENDING","wallet_balance":"0.018516777292"}'
+      string: '{"transaction_id":"01KR3Ml3YEGT5mPWZXmYxhlyEr9d-iTlSMWco43BL3Q","transaction_link":"https://ar-io.dev/tx/01KR3Ml3YEGT5mPWZXmYxhlyEr9d-iTlSMWco43BL3Q","transaction_status":"PENDING","wallet_balance":"0.069232490453"}'
     headers:
       content-length:
-      - '226'
+      - '215'
       content-type:
       - application/json
       date:
-      - Thu, 22 Sep 2022 16:28:06 GMT
+      - Fri, 13 Mar 2026 13:47:28 GMT
       server:
       - uvicorn
     status:

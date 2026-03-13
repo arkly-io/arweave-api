@@ -9,23 +9,23 @@ interactions:
       Connection:
       - keep-alive
       Content-Length:
-      - '3339'
+      - '3305'
       Content-Type:
-      - multipart/form-data; boundary=b5074196eef164d7554028b54ce01f96
+      - multipart/form-data; boundary=4b74648ad4881de7d225534cc5d549fd
       User-Agent:
-      - python-requests/2.28.1
+      - python-requests/2.32.5
     method: POST
-    uri: http://127.0.0.1:8000/check_balance/
+    uri: http://0.0.0.0:8000/check_wallet_balance/
   response:
     body:
-      string: '{"balance":0.019137068801}'
+      string: '{"wallet_address":"6KymaAPWd3JNyMT0B7EPYij4TWxehhMrzRD8qifCSLs","ar":0.068251878467,"winstons":68251878466}'
     headers:
       content-length:
-      - '26'
+      - '107'
       content-type:
       - application/json
       date:
-      - Tue, 20 Sep 2022 17:17:41 GMT
+      - Fri, 13 Mar 2026 14:08:29 GMT
       server:
       - uvicorn
     status:

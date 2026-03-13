@@ -184,7 +184,7 @@ async def _check_last_transaction_get(wallet_address: str) -> dict:
     }
 
 
-async def _check_transaction_status(transaction_id: int) -> dict:
+async def _check_transaction_status(transaction_id: str) -> dict:
     """Allows a user to check the transaction id of their last
     transaction.
 
