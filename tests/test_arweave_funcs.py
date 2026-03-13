@@ -46,8 +46,9 @@ def test_random_gateway(mocker, choices, responses, result):
 
     mocker.patch("random.choice", side_effect=choices)
     mocker.patch("requests.head", side_effect=responses)
-    b = arweave_utilities.retrieve_gateway(weighted_dict)
-    assert b == result
+    gateway = arweave_utilities.retrieve_gateway(weighted_dict)
+    assert gateway == result
+    # Ensure the weighted dict hasn't changed.
     assert weighted_dict == {
         "http://abc": 5,
         "http://def": 1,
