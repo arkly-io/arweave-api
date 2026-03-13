@@ -350,7 +350,7 @@ async def _fetch_upload(transaction_id: str) -> FileResponse:
             timeout=REQ_TIMEOUT,
         )
         if response.status_code != 200:
-            return {"error": f"{response.status_code} {response.reason}"}
+            return {ERR_KEY: f"{response.status_code} {response.reason}"}
         with open(str(fetch_dir), "wb") as content:
             content.write(response.content)
         return FileResponse(str(fetch_dir))
