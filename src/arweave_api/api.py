@@ -77,6 +77,7 @@ app.add_middleware(
 
 
 app.state.nopublish = helpers.get_nopublish()
+app.state.file_size_limit = helpers.get_f_limit()
 
 
 @app.get("/", include_in_schema=False)
@@ -177,6 +178,15 @@ async def create_transaction(
     tags: Tags | None = None,
 ):
     """Create an Arkly package and Arweave transaction."""
+    if app.state.file_size_limit > 0:
+        # Check against app state here so that we don't pass app back
+        # into primary functions if we don't need to.
+        for file in files:
+            if file.size < app.state.file_size_limit:
+                continue
+            return {
+                primary_functions.ERR_KEY: f"{file.filename} size is too big: {file.size} bytes",
+            }
     return await primary_functions._create_transaction(
         wallet, files, package_file_name, tags, app.state.nopublish
     )
