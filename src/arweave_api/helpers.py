@@ -18,7 +18,10 @@ def _get_env_bool(value: str) -> bool:
 
 def _get_env_int(value: str) -> int:
     """Get reliable integer environment variables."""
-    return int(os.getenv(value, 0))
+    try:
+        return int(os.getenv(value, "0"))
+    except ValueError:
+        return 0
 
 
 def get_nopublish():
