@@ -5,7 +5,7 @@ bagit==1.9.0
 fastapi==0.129.0
 humanize==4.15.0
 pydantic==2.12.5
-python-multipart==0.0.22
+python-multipart==0.0.32
 requests==2.32.5
 ulid-py==1.1.0
 uvicorn==0.41.0
